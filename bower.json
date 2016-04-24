@@ -1,0 +1,22 @@
+{
+  "name": "BIS-D3-Graph",
+  "homepage": "https://github.com/k4l4m/BIS-D3-Graph",
+  "description": "BIS Project. Directive for angularjs using D3 to visualize and control graphs.",
+  "main": "index.html",
+  "moduleType": [],
+  "keywords": [
+    "D3",
+    "AngularJS"
+  ],
+  "authors": [
+    "Toni Pohl"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
