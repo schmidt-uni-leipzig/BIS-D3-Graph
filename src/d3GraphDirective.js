@@ -1,12 +1,12 @@
 angular.module('d3graph', [])
-    .directive('d3Graph', function () {
+    .directive('d3Graph', function ($log) {
             return {
                 restrict: 'E',
                 template: '<div class="d3Graph"></div>',
                 replace: true,
                 scope: {
-                    data: '@',
-                    options: '@'
+                    data: '<',
+                    options: '<'
                 },
                 link: function (scope, element, attrs) {
                     var DOCUMENT_ICON = '\uf0f6';
@@ -16,60 +16,14 @@ angular.module('d3graph', [])
                     var OBJECT_ICON = '\uf02c';
                     var UNKNOWN_ICON = '\uf128';
                     var CIRCLE_ICON = '\uf111';
+
                     //convert data
-                    if (scope.data == undefined){
-                        var data = {
-                            nodes: [
-                                {
-                                    id: 0,
-                                    name: "Node1",
-                                    color: "#fffff",
-                                    type: "Document",
-                                    longText: "Ein ganz besonders langer Text",
-                                    group: 0,
-                                    phase: "Planung"
-                                },
-                                {
-                                    id: 1,
-                                    name: "Node2",
-                                    color: "#fffff",
-                                    type: "Document",
-                                    longText: "Ein noch längerer Text",
-                                    group: 1
-                                },
-                                {
-                                    id: 2,
-                                    name: "Node3",
-                                    color: "#fffff",
-                                    type: "Document",
-                                    longText: "Ein noch längerer Text Teil II",
-                                    group: 2
-                                },
-                                {
-                                    id: 3,
-                                    name: "Node3",
-                                    color: "#fffff",
-                                    type: "Document",
-                                    longText: "Ein noch längerer Text Teil II",
-                                    group: 2
-                                }
-                            ],
-                            edges: [
-                                {
-                                    source: 0,
-                                    target: 1,
-                                    text: "Relates to",
-                                    color: "#12fff"
-                                }, {
-                                    source: 0,
-                                    target: 2,
-                                    text: "Relates to",
-                                    color: "#12fff"
-                                }]
-                        };
-                    }else{
-                        var data = scope.data;
+                    if (scope.data == undefined) {
+                        $log.error('Data for d3 graph is undefined.');
+                        return;
                     }
+
+                    var data = scope.data;
                     //Init Graph
 
 
@@ -85,7 +39,7 @@ angular.module('d3graph', [])
                         var typeKeys = {};
                         nodes.forEach(function (node) {
                             typeKeys[node.type] = true;
-                        })
+                        });
                         var types = Object.keys(typeKeys);
                         if (types.length > 0 && types[0] !== undefined) {
                             graph.legend.icons = buildIconLegend(types);
