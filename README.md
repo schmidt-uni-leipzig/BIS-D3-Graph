@@ -1,7 +1,7 @@
 # BIS-D3-Graph
 Graph visualization with D3 - Betriebliche Informationssysteme - University of Leipzig
 
-## Installation
+## Install
 Install [node](https://nodejs.org/en/), [bower](http://bower.io) and [grunt](http://gruntjs.com/getting-started).
 Run `npm install && bower install` to install dependencies and develop tools. 
 
