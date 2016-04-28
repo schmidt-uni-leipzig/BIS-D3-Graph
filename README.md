@@ -1,25 +1,28 @@
 # BIS-D3-Graph
-Graph visualization with D3 - BIS University of Leipzig
+Graph visualization with D3 - Betriebliche Informationssysteme - University of Leipzig
 
 ## Installation
-TODO
+Install [node](https://nodejs.org/en/), [bower](http://bower.io) and [grunt](http://gruntjs.com/getting-started).
+Run `npm install && bower install` to install dependencies and develop tools. 
 
-## Aufgabenstellung
-- Bestehendes Projekt analyiseren 
-- AngularJS Direktive umsetzen
-- Dokumentation mit Beispielen
+## Build
+Run `grunt build` to build and minify a library for production usage.
+
+## Tasks
+- Analyse current implementation
+- Create AngularJS directive which covers functionalities
+- Create documentation with example code
 
 ## Features
-- Dateiformat für Nodes / Edges
- - Nodes: Beschriftung, Icon, Farbe, Langtext
- - Edges: Beschriftung, Farbe
-- Verbesserung der Pfadanzeige
-- Detailanzeige
+- Define data format for nodes / edges
+ - Nodes: Label, icon, color, description
+ - Edges: Label, color
+- Improve path display
+- Detail view
 - Zoom
-- Gruppierung der Nodes
-- Pfadimplementierung verbessern
-- Labels ausrichten und ggf. umbrechen
-- Forces optimieren
-- Export
+- Grouping of nodes
+- Label positioning
+- Forces
+- Export to png and other formats
 
-Das Projekt wird im Rahmen des Praktikums des BIS Moduls durchgeführt. Betreuer ist [Johannes Schmidt](http://bis.informatik.uni-leipzig.de/JohannesSchmidt).
+This project is part of the [BIS Module](http://bis.informatik.uni-leipzig.de/de/Lehre/16/SS/BIS?v=4uk). Supervisor of the project is [Johannes Schmidt](http://bis.informatik.uni-leipzig.de/JohannesSchmidt).
