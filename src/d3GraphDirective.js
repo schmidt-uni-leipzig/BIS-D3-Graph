@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('d3graph', [])
     .directive('d3Graph', function ($log) {
             return {
@@ -18,7 +20,7 @@ angular.module('d3graph', [])
                     var CIRCLE_ICON = '\uf111';
 
                     //convert data
-                    if (scope.data == undefined) {
+                    if (scope.data === undefined) {
                         $log.error('Data for d3 graph is undefined.');
                         return;
                     }
