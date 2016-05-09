@@ -260,17 +260,17 @@ angular.module('d3graph', [])
                             .selectAll('path')
                             .data(graph.links).enter()
                             .append('path')
-                            .attr('d', function (d) {
+                           /*.attr('d', function (d) {
                                 var dx = d.target.x - d.source.x,
                                     dy = d.target.y - d.source.y,
-                                    dr = Math.sqrt(dx * dx + dy * dy);
+                                    dr = 0;
                                 return 'M' +
                                     d.source.x + ',' +
                                     d.source.y + 'A' +
                                     dr + ',' + dr + ' 0 0,1 ' +
                                     d.target.x + ',' +
                                     d.target.y;
-                            })
+                            })*/
                             .attr('class', pathClass)
                             .attr('marker-end', 'url(#end)')
                             ;
@@ -347,6 +347,38 @@ angular.module('d3graph', [])
                             /*
                              .call(wrap, 110)
                              */;
+                        var linkPaths = svg.selectAll(".linkpath")
+                            .data(graph.links)
+                            .enter()
+                            .append('path')
+                            .attr({'d': function(d) {
+                                //return 'M'+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y
+                            },
+                                'class':'edgepath',
+                                'fill-opacity':0,
+                                'stroke-opacity':0,
+                                'fill':'blue',
+                                'stroke':'red',
+                                'id':function(d,i) {return 'linkpath'+i}})
+                            .style("pointer-events", "none");
+
+                        var linkLabels = svg.selectAll(".linkLabel")
+                            .data(graph.links)
+                            .enter()
+                            .append('text')
+                            .style("pointer-events", "none")
+                            .attr({'class':'linklabel',
+                                'id':function(d,i){return 'linklabel'+i},
+                                'dx':80,
+                                'dy':0,
+                                'font-size':10,
+                                'fill':'#aaa'});
+
+                        linkLabels.append('textPath')
+                            .attr('xlink:href',function(d,i) {return '#linkpath'+i})
+                            .style("pointer-events", "none")
+                            .text(function(d,i){
+                            return d.text});
 
                         if (graph.legend.icons) {
                             var iconLegendBox = svg.append('svg:g')
@@ -440,15 +472,31 @@ angular.module('d3graph', [])
                             .size([width, height])
                             .start()
                             .on('tick', function () {
-                                link.attr('d', function (d) {
+                               link.attr('d', function (d) {
                                     var dx = d.target.x - d.source.x,
                                         dy = d.target.y - d.source.y,
-                                        dr = Math.sqrt(dx * dx + dy * dy);
+                                        dr = 0;
+                                   //console.log(d.source.x);
                                     return 'M' + d.source.x + ',' + d.source.y + 'A' + dr + ',' + dr + ' 0 0,1 ' + d.target.x + ',' + d.target.y;
                                 });
 
                                 node.attr('transform', function (d) {
                                     return 'translate(' + d.x + ',' + d.y + ')';
+                                });
+                                linkPaths.attr('d', function(d) { var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+                                    //console.log(d)
+                                    return path});
+
+                                linkLabels.attr('transform',function(d,i){
+                                    if (d.target.x<d.source.x){
+                                        var bbox = this.getBBox();
+                                        var rx = bbox.x+bbox.width/2;
+                                        var ry = bbox.y+bbox.height/2;
+                                        return 'rotate(180 '+rx+' '+ry+')';
+                                    }
+                                    else {
+                                        return 'rotate(0)';
+                                    }
                                 });
                             });
 
