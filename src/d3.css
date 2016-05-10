@@ -1,77 +1,4 @@
-.tick line {
-  shape-rendering: crispEdges;
-  stroke: #000;
-}
-
-line.minor {
-  stroke: #777;
-  stroke-dasharray: 2, 2;
-}
-
-path.domain {
-  fill: none;
-  stroke: black;
-}
-
-.d3-tip {
-  line-height: 1;
-  font-weight: bold;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.8);
-  color: #fff;
-  border-radius: 2px;
-}
-
-/* Creates a small triangle extender for the tooltip */
-.d3-tip:after {
-  box-sizing: border-box;
-  display: inline;
-  font-size: 10px;
-  width: 100%;
-  line-height: 1;
-  color: rgba(0, 0, 0, 0.8);
-  content: "\25BC";
-  position: absolute;
-  text-align: center;
-}
-
-/* Style northward tooltips differently */
-.d3-tip.n:after {
-  margin: -1px 0 0 0;
-  top: 100%;
-  left: 0;
-}
-
-
-.d3Graph > svg {
-  border: 2px solid #9b0524;
-  cursor: all-scroll;
-}
-
-.d3Graph .nodebackground {
-  fill: white;
-}
-
-.d3Graph .nodeforeground {
-  fill: transparent;
-  stroke: #444;
-  stroke-width: 1px;
-  cursor: default;
-}
-
-.d3Graph .selectednode {
-  stroke: red;
-  stroke-width: 1px;
-}
-
-.d3Graph .nodeicon {
-  text-anchor: middle;
-  dominant-baseline: central;
-  font-family: FontAwesome;
-  font-size: 13px;
-}
-
-.d3Graph .nodetext {
+.node .text {
   font-family: Arial;
   display: block;
   width: 40px;
@@ -80,66 +7,11 @@ path.domain {
   z-index: 100;
 }
 
-.d3Graph #iconlegend rect,
-.d3Graph #colorlegend rect {
-  stroke: grey;
-  stroke-width: 1;
-  stroke-dasharray: 5, 5;
-  fill: white;
+rect {
+  fill: #ddd;
 }
 
-.d3Graph #iconlegend .icon,
-.d3Graph #colorlegend .icon {
-  font-family: FontAwesome;
-  display: block;
-  width: 40px;
-  font-size: 16px;
-  text-align: left;
-}
-
-.d3Graph #iconlegend .text,
-.d3Graph #colorlegend .text {
-  font-family: Arial;
-  display: block;
-  width: 40px;
-  font-size: 16px;
-  text-align: left;
-}
-
-.d3Graph .link {
-  fill: none;
-}
-
-.d3Graph .undefined {
-  stroke: #666;
-  stroke-dasharray: 5, 5;
-}
-
-.d3Graph .documentflow {
-  stroke: #666;
-  stroke-width: 1;
-}
-
-.d3Graph .brush .extent {
-  shape-rendering: crispEdges;
-}
-
-.d3Graph .svg-container {
-  display: inline-block;
-  position: relative;
-  width: 100%;
-  padding-bottom: 100%; /* aspect ratio */
-  vertical-align: top;
-  overflow: hidden;
-}
-
-.d3Graph .svg-content-responsive {
-  display: inline-block;
-  position: absolute;
-  top: 10px;
-  left: 0;
-}
-
-.d3tree > svg {
-  border: 2px solid #9b0524;
+rect.zoom {
+  stroke: steelblue;
+  fill-opacity: 0.5;
 }
