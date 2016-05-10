@@ -1,3 +1,5 @@
+/*global d3*/
+/*jslint latedef:false*/
 'use strict';
 
 angular.module('d3graph', [])
@@ -98,7 +100,7 @@ angular.module('d3graph', [])
                     // Move link text
                     linksContainer
                         .selectAll('.link .label')
-                        .attr('transform', function (d, i) {
+                        .attr('transform', function (d) {
                             if (d.target.x < d.source.x) {
                                 var bbox = this.getBBox();
                                 var rx = bbox.x + bbox.width / 2;
@@ -216,7 +218,7 @@ angular.module('d3graph', [])
                         .attr('class', 'link')
                         .attr('marker-end', 'url(#end)')
                         .style('stroke', function (d) {
-                            return d.color || '#777'
+                            return d.color || '#777';
                         })
                         .style({
                             'stroke-width': '2px',
@@ -233,7 +235,7 @@ angular.module('d3graph', [])
                             'fill': 'blue',
                             'stroke': 'red',
                             'id': function (d, i) {
-                                return 'linkpath' + i
+                                return 'linkpath' + i;
                             }
                         })
                         .style('pointer-events', 'none');
@@ -245,7 +247,7 @@ angular.module('d3graph', [])
                         .attr({
                             'class': 'link label',
                             'id': function (d, i) {
-                                return 'linklabel' + i
+                                return 'linklabel' + i;
                             },
                             'dx': 80,
                             'dy': 0,
@@ -254,11 +256,11 @@ angular.module('d3graph', [])
                         })
                         .append('textPath')
                         .attr('xlink:href', function (d, i) {
-                            return '#linkpath' + i
+                            return '#linkpath' + i;
                         })
                         .style("pointer-events", "none")
-                        .text(function (d, i) {
-                            return d.text
+                        .text(function (d) {
+                            return d.text;
                         });
 
                     return linksContainer;
@@ -301,6 +303,7 @@ angular.module('d3graph', [])
 
                 // Drag started
                 function dragStarted(d) {
+                    /*jshint validthis: true */
                     d3.event.sourceEvent.stopPropagation();
 
                     d3.select(this).classed('dragging', true);
@@ -309,23 +312,27 @@ angular.module('d3graph', [])
 
                 // Dragging
                 function dragged(d) {
+                    /*jshint validthis: true */
                     d3.select(this).attr('cx', d.x = d3.event.x).attr('cy', d.y = d3.event.y);
                 }
 
                 // Drag ended
                 function dragEnded(d) {
+                    /*jshint validthis: true */
                     d3.select(this).classed('dragging', false);
                 }
 
                 // Listener for placing mouse cursor on node
                 // Shows node text
                 function nodeMouseEnter() {
+                    /*jshint validthis: true */
                     d3.select(this.parentNode).select('.node .text')
                         .style('visibility', 'visible');
                 }
 
                 // Listener to reset state of node text to hidden
                 function nodeMouseLeave() {
+                    /*jshint validthis: true */
                     d3.select(this.parentNode).select('.node .text')
                         .style('visibility', 'hidden');
                 }
@@ -333,6 +340,7 @@ angular.module('d3graph', [])
                 // Zoom the graph by selecting an area
                 //TODO
                 function rectZoom() {
+                    /*jshint validthis: true */
                     if (!isRectZoom) return;
                     var e = this,
                         origin = d3.mouse(e),
@@ -454,7 +462,7 @@ angular.module('d3graph', [])
                     var canvas = document.querySelector("canvas"),
                         context = canvas.getContext("2d");
 
-                    var image = new Image;
+                    var image = new Image();
                     image.src = imgsrc;
                     image.onload = function () {
                         context.drawImage(image, 0, 0);
@@ -464,8 +472,8 @@ angular.module('d3graph', [])
                         canvas.toBlob(function (blob) {
                             console.log(blob);
                             //saveAs(blob, 'graph.png');
-                        })
-                    }
+                        });
+                    };
 
                     //TODO PDF save
                 }

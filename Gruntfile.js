@@ -111,5 +111,5 @@ module.exports = function(grunt) {
         'ngAnnotate:dist',
         'uglify:dist',
         'cssmin:dist'
-    ])
+    ]);
 };
