@@ -26,6 +26,18 @@ angular.module('d3graph', [])
                 var nodes = scope.data.nodes;
                 var links = scope.data.edges;
 
+                // Create object with every neighbour
+                var nodeNeighbours = {};
+                // Every node is neighbour of himself
+                nodes.forEach(function(node, index) {
+                    nodeNeighbours[index + ',' + index] = 1;
+                });
+
+                // Create neighbours by links
+                links.forEach(function(edge) {
+                    nodeNeighbours[edge.source + ',' + edge.target] = 1;
+                });
+
                 var isRectZoom = false;
 
                 /*
@@ -151,7 +163,9 @@ angular.module('d3graph', [])
                         .enter()
                         .append('g')
                         .attr('class', 'node')
-                        .call(drag); // Append node dragging
+                        .call(drag) // Append node dragging
+                        .on('mouseenter', nodeMouseEnter) // Mouse enter show label and neighbours
+                        .on('mouseleave', nodeMouseLeave); // Reset label and neighbours
 
                     // Node background
                     nodesContainer.append('circle')
@@ -183,9 +197,7 @@ angular.module('d3graph', [])
                             'stroke': '#444',
                             'stroke-width': '1px',
                             'cursor': 'default'
-                        })
-                        .on('mouseenter', nodeMouseEnter)
-                        .on('mouseleave', nodeMouseLeave);
+                        });
 
                     // Node text, shown on mouseover
                     nodesContainer.append('text')
@@ -324,17 +336,34 @@ angular.module('d3graph', [])
 
                 // Listener for placing mouse cursor on node
                 // Shows node text
-                function nodeMouseEnter() {
+                function nodeMouseEnter(selectedNode) {
                     /*jshint validthis: true */
-                    d3.select(this.parentNode).select('.node .text')
+                    d3.select(this).select('.node .text')
                         .style('visibility', 'visible');
+
+                    // Hide all nodes that are not neighbours of the selected node
+                    nodesContainer.style('opacity', function(node) {
+                        // Is there a connection between nodes?
+                        return nodeNeighbours[selectedNode.id + ',' + node.id] || nodeNeighbours[node.id + ',' + selectedNode.id] ? 1 : 0;
+                    });
+
+                    // Hide all links that don't connect to the selected node
+                    linksContainer.style('opacity', function(link) {
+                        // Selected node target or source?
+                        return selectedNode.id === link.source.id || selectedNode.id === link.target.id ? 1 : 0;
+                    });
+
                 }
 
                 // Listener to reset state of node text to hidden
                 function nodeMouseLeave() {
                     /*jshint validthis: true */
-                    d3.select(this.parentNode).select('.node .text')
+                    d3.select(this).select('.node .text')
                         .style('visibility', 'hidden');
+
+                    // Reset opacity of nodes and links
+                    nodesContainer.style('opacity', 1);
+                    linksContainer.style('opacity', 1);
                 }
 
                 // Zoom the graph by selecting an area
