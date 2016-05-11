@@ -38,6 +38,9 @@ angular.module('d3graph', [])
                     nodeNeighbours[edge.source + ',' + edge.target] = 1;
                 });
 
+                // Array of selected nodes
+                var selectedNodes = [];
+
                 var isRectZoom = false;
 
                 /*
@@ -165,7 +168,8 @@ angular.module('d3graph', [])
                         .attr('class', 'node')
                         .call(drag) // Append node dragging
                         .on('mouseenter', nodeMouseEnter) // Mouse enter show label and neighbours
-                        .on('mouseleave', nodeMouseLeave); // Reset label and neighbours
+                        .on('mouseleave', nodeMouseLeave) // Reset label and neighbours
+                        .on('click', nodeClick);
 
                     // Node background
                     nodesContainer.append('circle')
@@ -366,6 +370,25 @@ angular.module('d3graph', [])
                     linksContainer.style('opacity', 1);
                 }
 
+                // Listener to select node
+                function nodeClick(node) {
+                    // Toggle node selection
+                    if (node.selected) {
+                        selectedNodes.splice(selectedNodes.indexOf(node), 1); // Remove node from selected nodes
+                        node.selected = false;
+                    } else {
+                        selectedNodes.push(node); // Add node to selected nodes
+                        node.selected = true;
+                    }
+                    // Background color depends on selection boolean
+                    d3.select(this).select('.node .background')
+                        .style('fill', function() {
+                            return node.selected ? 'red' : node.color;
+                        });
+
+                    if (selectedNodes.length === 2) showConnectedPath(selectedNodes[0], selectedNodes[1]);
+                }
+
                 // Zoom the graph by selecting an area
                 //TODO
                 function rectZoom() {
@@ -524,6 +547,11 @@ angular.module('d3graph', [])
                         .attr('orient', 'auto')
                         .append('svg:path')
                         .attr('d', 'M0,-5L10,0L0,5');
+                }
+
+                // Show the connected path between two nodes
+                function showConnectedPath(source, end) {
+                    //TODO
                 }
             }
         };
