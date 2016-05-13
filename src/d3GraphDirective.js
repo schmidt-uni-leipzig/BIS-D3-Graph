@@ -9,7 +9,8 @@ angular.module('d3graph', [])
             template: '<svg id="d3Graph"></svg>',
             scope: {
                 data: '<',
-                options: '<'
+                options: '<',
+                api: '<'
             },
             link: function (scope, element, attrs) {
                 var width = 1000,
@@ -135,6 +136,17 @@ angular.module('d3graph', [])
                 initMarkers(svg, circleRadius, markerWidth, markerHeight);
                 // Start the force layout
                 force.start();
+
+                var api = {
+                    exportAsPNG: function(filename) {
+                        exportAsPNG(filename, svg);
+                    },
+                    exportAsSVG: function(filename) {
+                        exportAsSVG(filename, svg);
+                    }
+                };
+
+                scope.api(api);
 
 
                 /*
@@ -434,6 +446,35 @@ angular.module('d3graph', [])
                 }
 
                 /*
+                 * API functions
+                 */
+                // Export the graph as a PNG
+                function exportAsPNG(fileName, svg) {
+                    var html = getSVGHtml(svg);
+
+                    d3.select('body').append('canvas')
+                        .attr('width', width)
+                        .attr('height', height);
+                    var canvas = document.querySelector("canvas"),
+                        context = canvas.getContext("2d");
+
+                    var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(html)));
+                    var image = new Image();
+                    image.src = imgsrc;
+                    image.onload = function () {
+                        context.drawImage(image, 0, 0);
+                        canvas.toBlob(function (blob) {
+                            saveAs(blob, fileName + '.png');
+                        });
+                    };
+                }
+
+                // Export the graph as a SVG
+                function exportAsSVG(filename, svg) {
+                    saveAs(getSVGBlob(svg), filename + '.svg');
+                }
+
+                /*
                  * Utility functions
                  * Centering graph, etc.
                  */
@@ -490,44 +531,17 @@ angular.module('d3graph', [])
                     zoom.scale(minRatio);
                 }
 
-                // Expot graph as png/pdf/svg
-                function exportGraph() {
-                    var html = svg
+                // Get the BLOB of the SVG. Used for API functions.
+                function getSVGBlob(svg) {
+                    return new Blob([getSVGHtml(svg)], {type: 'image/svg+xml'});
+                }
+
+                // Get the html of the svg. Used for API functions.
+                function getSVGHtml(svg) {
+                    return svg
                         .attr('version', 1.1)
                         .attr('xmlns', 'http://www.w3.org/2000/svg')
                         .node().parentNode.innerHTML;
-
-
-                    // SVG save
-                    var blob = new Blob([html], {type: 'image/svg+xml'});
-                    //saveAs(blob, 'graph.svg');
-
-                    // PNG save
-                    var imgsrc = 'data:image/svg+xml;base64,' + btoa(html);
-                    console.log(imgsrc);
-                    var img = '<img src="' + imgsrc + '">';
-                    //d3.select('body').append('div').html(img);
-
-                    d3.select('body').append('canvas')
-                        .attr('width', width)
-                        .attr('height', height);
-                    var canvas = document.querySelector("canvas"),
-                        context = canvas.getContext("2d");
-
-                    var image = new Image();
-                    image.src = imgsrc;
-                    image.onload = function () {
-                        context.drawImage(image, 0, 0);
-
-                        var canvasdata = canvas.toDataURL("image/png");
-
-                        canvas.toBlob(function (blob) {
-                            console.log(blob);
-                            //saveAs(blob, 'graph.png');
-                        });
-                    };
-
-                    //TODO PDF save
                 }
 
                 // Define arrow markers

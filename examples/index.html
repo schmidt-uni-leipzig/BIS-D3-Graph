@@ -7,7 +7,8 @@
     <link rel="stylesheet" href="../src/d3.css">
 </head>
 <body ng-controller="BasicCtrl">
-    <d3-graph data="data"></d3-graph>
+    <button ng-click="save()">Save</button>
+    <d3-graph data="data" api="api"></d3-graph>
     <div>
     <p>
         <strong>Graph commands</strong>
@@ -22,6 +23,7 @@
     </ul>
     </p>
     </div>
+    <script src="../bower_components/FileSaver/FileSaver.min.js"></script>
     <script src="../bower_components/d3/d3.js"></script>
     <script src="../bower_components/angular/angular.js"></script>
     <script src="../src/d3GraphDirective.js"></script>
@@ -78,6 +80,14 @@
                         color: "#777"
                     }]
             };
+
+
+
+            $scope.api = function(api) {
+                $scope.save = function () {
+                    api.exportAsPNG('test');
+                };
+            }
         });
     </script>
 </body>
