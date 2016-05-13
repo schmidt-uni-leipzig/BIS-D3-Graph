@@ -1,3 +1,5 @@
+![Build status](https://travis-ci.org/k4l4m/BIS-D3-Graph.svg?branch=master)
+
 # BIS-D3-Graph
 Graph visualization with D3 - Betriebliche Informationssysteme - University of Leipzig
 
