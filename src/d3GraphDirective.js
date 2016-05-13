@@ -10,7 +10,7 @@ angular.module('d3graph', [])
             scope: {
                 data: '<',
                 options: '<',
-                api: '<'
+                api: '<?'
             },
             link: function (scope, element, attrs) {
                 var width = 1000,
@@ -146,8 +146,7 @@ angular.module('d3graph', [])
                     }
                 };
 
-                scope.api(api);
-
+                if (angular.isFunction(scope.api)) scope.api(api);
 
                 /*
                  * Render functions
