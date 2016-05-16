@@ -1,4 +1,3 @@
-/*global d3*/
 /*jslint latedef:false*/
 'use strict';
 
@@ -329,7 +328,7 @@ angular.module('d3graph', [])
                 }
 
                 // Drag started
-                function dragStarted(d) {
+                function dragStarted() {
                     /*jshint validthis: true */
                     d3.event.sourceEvent.stopPropagation();
 
@@ -344,7 +343,7 @@ angular.module('d3graph', [])
                 }
 
                 // Drag ended
-                function dragEnded(d) {
+                function dragEnded() {
                     /*jshint validthis: true */
                     d3.select(this).classed('dragging', false);
                 }
@@ -383,6 +382,7 @@ angular.module('d3graph', [])
 
                 // Listener to select node
                 function nodeClick(node) {
+                    /*jshint validthis: true */
                     // Toggle node selection
                     if (node.selected) {
                         selectedNodes.splice(selectedNodes.indexOf(node), 1); // Remove node from selected nodes
@@ -457,7 +457,7 @@ angular.module('d3graph', [])
                     var canvas = document.querySelector("canvas"),
                         context = canvas.getContext("2d");
 
-                    var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(html)));
+                    var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(html))); //TODO alternative for unescape
                     var image = new Image();
                     image.src = imgsrc;
                     image.onload = function () {
@@ -472,6 +472,7 @@ angular.module('d3graph', [])
                 function exportAsSVG(filename, svg) {
                     saveAs(getSVGBlob(svg), filename + '.svg');
                 }
+                //TODO export as PDF
 
                 /*
                  * Utility functions

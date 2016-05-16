@@ -9,8 +9,11 @@
   "node": true,
   "strict": true,
   "undef": true,
-  "unused": true,
+  "unused": false,
   "globals": {
-    "angular": false
+    "angular": false,
+    "d3": true,
+    "saveAs": true,
+    "unescape": true
   }
 }

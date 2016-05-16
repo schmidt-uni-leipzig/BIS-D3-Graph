@@ -7,10 +7,12 @@
     <link rel="stylesheet" href="../src/d3.css">
 </head>
 <body ng-controller="BasicCtrl">
-    <button ng-click="save()">Save</button>
     <d3-graph data="data" api="api"></d3-graph>
     <div>
-    <p>
+        <button ng-click="savePNG()">Save as PNG</button>
+        <button ng-click="saveSVG()">Save as SVG</button>
+
+        <p>
         <strong>Graph commands</strong>
     <ul>
         <li>Press c-Key to focus the graph</li>
@@ -84,9 +86,12 @@
 
 
             $scope.api = function(api) {
-                $scope.save = function () {
+                $scope.savePNG = function() {
                     api.exportAsPNG('test');
                 };
+                $scope.saveSVG = function() {
+                    api.exportAsSVG('test');
+                }
             }
         });
     </script>
