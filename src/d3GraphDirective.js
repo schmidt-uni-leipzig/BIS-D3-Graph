@@ -27,16 +27,19 @@ angular.module('d3graph', [])
                 var links = scope.data.edges;
 
                 // Create object with every neighbour
-                var nodeNeighbours = {};
-                // Every node is neighbour of himself
-                nodes.forEach(function(node, index) {
-                    nodeNeighbours[index + ',' + index] = 1;
+                var adjacencyMatrix = {};
+                var _nodeNeighbours = [];
+
+                // Every node is a neighbour of himself
+                nodes.forEach(function(node) {
+                    adjacencyMatrix[[node.id, node.id]] = true;
                 });
 
                 // Create neighbours by links
                 links.forEach(function(edge) {
-                    nodeNeighbours[edge.source + ',' + edge.target] = 1;
+                    adjacencyMatrix[[edge.source, + edge.target]] = true;
                 });
+
 
                 // Array of selected nodes
                 var selectedNodes = [];
@@ -358,7 +361,7 @@ angular.module('d3graph', [])
                     // Hide all nodes that are not neighbours of the selected node
                     nodesContainer.style('opacity', function(node) {
                         // Is there a connection between nodes?
-                        return nodeNeighbours[selectedNode.id + ',' + node.id] || nodeNeighbours[node.id + ',' + selectedNode.id] ? 1 : 0;
+                        return adjacencyMatrix[[selectedNode.id, node.id]] || adjacencyMatrix[[node.id, selectedNode.id]] ? 1 : 0;
                     });
 
                     // Hide all links that don't connect to the selected node
@@ -397,7 +400,16 @@ angular.module('d3graph', [])
                             return node.selected ? 'red' : node.color;
                         });
 
-                    if (selectedNodes.length === 2) showConnectedPath(selectedNodes[0], selectedNodes[1]);
+                    // Show the connected pathes
+                    if (selectedNodes.length === 2) {
+                        showConnectedPath(selectedNodes[0], selectedNodes[1]);
+                    }
+                    else {
+                        // Reset opacity of links
+                        linksContainer
+                            .selectAll('.link')
+                            .style('opacity', 1);
+                    }
                 }
 
                 // Zoom the graph by selecting an area
@@ -565,7 +577,52 @@ angular.module('d3graph', [])
 
                 // Show the connected path between two nodes
                 function showConnectedPath(source, end) {
-                    //TODO
+                    var paths = [];
+                    traverse(source.id, paths);
+
+                    // Get path with fitting end
+                    paths = paths.filter(function(path) {
+                        return path[path.length - 1] === end.id;
+                    });
+
+                    // Flatten paths
+                    paths = [].concat.apply([], paths).filter(function(item, pos, self) {
+                        return self.indexOf(item) === pos;
+                    });
+
+                    linksContainer
+                        .selectAll('.link')
+                        .style('opacity', function(d) {
+                            return paths.indexOf(d.source.id) !== -1 && paths.indexOf(d.target.id) !== -1 ? 1 : 0.2;
+                        });
+                }
+
+                function traverse(start, paths) {
+                    var visited = [];
+                    var queue = [];
+                    var next = [start];
+                    var last;
+
+                    while (next || next === 0) {
+                        last = next[next.length - 1];
+                        if (visited.indexOf(last) === -1) {
+                            visited.push(last);
+                            nodes.filter(function (d) {
+                                if (last !== d.id && adjacencyMatrix[[last, d.id]]) {
+
+                                    return true;
+                                }
+                                return false;
+                            }).forEach(function (d) {
+                                var tmp = angular.copy(next);
+                                tmp.push(d.id);
+                                paths.push(angular.copy(tmp));
+                                queue.push(angular.copy(tmp));
+                            });
+
+                        }
+                        next = queue.shift();
+                    }
                 }
             }
         };

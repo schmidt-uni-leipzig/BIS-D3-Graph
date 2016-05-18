@@ -67,6 +67,22 @@
                         type: '\uf0f6',
                         longText: "Ein noch längerer Text Teil II",
                         group: 2
+                    },
+                    {
+                        id: 4,
+                        name: 'Node 5'
+                    },
+                    {
+                        id: 5,
+                        name: 'Node 6'
+                    },
+                    {
+                        id: 6,
+                        name: 'Node 7'
+                    },
+                    {
+                        id: 7,
+                        name: 'Node 8'
                     }
                 ],
                 edges: [
@@ -75,12 +91,47 @@
                         target: 1,
                         text: "Relates to",
                         color: "#777"
-                    }, {
+                    },
+                    {
                         source: 0,
                         target: 2,
                         text: "Relates to",
                         color: "#777"
-                    }]
+                    },
+                    {
+                        source: 6,
+                        target: 5
+                    },
+                    {
+                        source: 2,
+                        target: 5
+                    },
+                    {
+                        source: 3,
+                        target: 4
+                    },
+                    {
+                        source: 3,
+                        target: 5
+                    },
+                    {
+                        source: 4,
+                        target: 5
+                    },
+                    {
+                        source: 3,
+                        target: 2
+                    },
+                    {
+                        source: 0,
+                        target: 7
+                    },
+                    {
+                        source: 7,
+                        target: 4
+                    }
+
+                ]
             };
 
 
