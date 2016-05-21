@@ -145,6 +145,9 @@ angular.module('d3graph', [])
                     },
                     exportAsSVG: function(filename) {
                         exportAsSVG(filename, svg);
+                    },
+                    exportAsPDF: function(filename) {
+                        exportAsPDF(filename, svg);
                     }
                 };
 
@@ -441,7 +444,6 @@ angular.module('d3graph', [])
                             m[0] = Math.max(0, Math.min(width, m[0]));
                             m[1] = Math.max(0, Math.min(height, m[1]));
                             if (m[0] !== origin[0] && m[1] !== origin[1]) {
-                                console.log('here');
                                 zoom.x(xScale.domain([origin[0], m[0]].sort()))
                                     .y(yScale.domain([origin[1], m[1]].map(yScale.invert).sort()));
                             }
@@ -461,30 +463,27 @@ angular.module('d3graph', [])
                  */
                 // Export the graph as a PNG
                 function exportAsPNG(fileName, svg) {
-                    var html = getSVGHtml(svg);
-
-                    d3.select('body').append('canvas')
-                        .attr('width', width)
-                        .attr('height', height);
-                    var canvas = document.querySelector("canvas"),
-                        context = canvas.getContext("2d");
-
-                    var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(html))); //TODO alternative for unescape
-                    var image = new Image();
-                    image.src = imgsrc;
-                    image.onload = function () {
-                        context.drawImage(image, 0, 0);
+                    getCanvasWithImage(svg, function(canvas) {
                         canvas.toBlob(function (blob) {
                             saveAs(blob, fileName + '.png');
                         });
-                    };
+                    });
                 }
 
                 // Export the graph as a SVG
                 function exportAsSVG(filename, svg) {
                     saveAs(getSVGBlob(svg), filename + '.svg');
                 }
-                //TODO export as PDF
+
+                // Export the graph as a PDF
+                function exportAsPDF(filename, svg) {
+                    var pdf = new jsPDF('landscape');
+                    getCanvasWithImage(svg, function(canvas) {
+                        var imgData = canvas.toDataURL('image/png');
+                        pdf.addImage(imgData, 'PNG', 0, 0);
+                        pdf.save(filename + '.pdf');
+                    });
+                }
 
                 /*
                  * Utility functions
@@ -556,6 +555,26 @@ angular.module('d3graph', [])
                         .node().parentNode.innerHTML;
                 }
 
+                // Generates a canvas with an image from the svg
+                function getCanvasWithImage(svg, cb) {
+                    var html = getSVGHtml(svg);
+
+                    d3.select('body').append('canvas')
+                        .attr('width', width)
+                        .attr('height', height)
+                        .style('display', 'none');
+                    var canvas = document.querySelector("canvas"),
+                        context = canvas.getContext("2d");
+
+                    var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(html))); //TODO alternative for unescape
+                    var image = new Image();
+                    image.src = imgsrc;
+                    image.onload = function () {
+                        context.drawImage(image, 0, 0);
+                        cb(canvas);
+                    };
+                }
+
                 // Define arrow markers
                 function initMarkers(svg, circleRadius, markerWidth, markerHeight) {
                     svg.append('svg:defs')
@@ -597,6 +616,7 @@ angular.module('d3graph', [])
                         });
                 }
 
+                // Traverse the graph and get all paths from start node
                 function traverse(start, paths) {
                     var visited = [];
                     var queue = [];

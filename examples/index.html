@@ -11,6 +11,7 @@
     <div>
         <button ng-click="savePNG()">Save as PNG</button>
         <button ng-click="saveSVG()">Save as SVG</button>
+        <button ng-click="savePDF()">Save as PDF</button>
 
         <p>
         <strong>Graph commands</strong>
@@ -26,6 +27,7 @@
     </p>
     </div>
     <script src="../bower_components/FileSaver/FileSaver.min.js"></script>
+    <script src="../bower_components/jspdf/dist/jspdf.min.js"></script>
     <script src="../bower_components/d3/d3.js"></script>
     <script src="../bower_components/angular/angular.js"></script>
     <script src="../src/d3GraphDirective.js"></script>
@@ -142,6 +144,9 @@
                 };
                 $scope.saveSVG = function() {
                     api.exportAsSVG('test');
+                };
+                $scope.savePDF = function() {
+                    api.exportAsPDF('test');
                 }
             }
         });

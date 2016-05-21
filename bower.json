@@ -23,7 +23,8 @@
     "angular": "^1.5.5",
     "d3": "^3.5.16",
     "font-awesome": "fontawesome#^4.6.1",
-    "FileSaver": "*"
+    "FileSaver": "*",
+    "jspdf": "^1.2.61"
   },
   "appPath": "src",
   "devDependencies": {
