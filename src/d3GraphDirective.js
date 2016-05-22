@@ -25,16 +25,40 @@ angular.module('d3graph', [])
 
                 var nodes = scope.data.nodes;
                 var links = scope.data.edges;
-
+                //label anchors and links
+                var labelAnchors = [];
+                var labelAnchorLinks = [];
+                for (var node in nodes) {
+                    labelAnchors.push({
+                        node: nodes[node]
+                    });
+                    labelAnchors.push({
+                        node: nodes[node]
+                    });
+                };
+                for (var link in links) {
+                    labelAnchorLinks.push({
+                        source: links[link].source,
+                        target: links[link].target+1,
+                        weight:1
+                    })
+                    console.log(labelAnchorLinks);
+                    console.log(labelAnchors)
+                    /*labelAnchorLinks.push({
+                        source: links[link].source,
+                        target: links[link].target,
+                        weight: 1
+                    })*/
+                }
                 // Create object with every neighbour
                 var nodeNeighbours = {};
                 // Every node is neighbour of himself
-                nodes.forEach(function(node, index) {
+                nodes.forEach(function (node, index) {
                     nodeNeighbours[index + ',' + index] = 1;
                 });
 
                 // Create neighbours by links
-                links.forEach(function(edge) {
+                links.forEach(function (edge) {
                     nodeNeighbours[edge.source + ',' + edge.target] = 1;
                 });
 
@@ -55,8 +79,21 @@ angular.module('d3graph', [])
                     .links(links);
 
                 force
-                    .linkDistance(170)
-                    .charge(-1000);
+                    .gravity(1)
+                    .linkDistance(150)
+                    .charge(-3000)
+                    .linkStrength(function(x) {
+                    return Math.random() * 10
+                });
+                // Force layout for label placement
+                var force2 =
+                    d3.layout.force()
+                    .nodes(labelAnchors)
+                        .links(labelAnchorLinks)
+                        .linkDistance(0)
+                        .linkStrength(8)
+                        .charge(-100)
+                        .size([width, height]);
 
                 // Drag function
                 var drag = d3.behavior.drag()
@@ -89,14 +126,97 @@ angular.module('d3graph', [])
                 var container = renderGraphContainer(svg);
                 var linksContainer = renderLinks(container);
                 var nodesContainer = renderNodes(container);
+                var anchorNodesContainer = renderAnchorNodes(container);
 
+                //nodes & links for label placement
+                var anchorLink = svg.selectAll("anchorLink").data(labelAnchorLinks).append('path')
+                    .attr('class', 'anchorLink');
+                /*var anchorNodes = svg
+                    .append('g')
+                    .attr('id', 'anchorNodes')
+                    .selectAll("anchorNode")
+                    .data(force2.nodes())
+                    .enter()
+                    .append("svg:g")
+                    .attr("class", "anchorNode")
+                    .append("svg:circle").attr("r", 0).style("fill", "#FFF")
+                    .append("svg:text").text(function (d, i) {
+                        //return d.node.name;
+                        return i % 2 == 0 ? "" : d.node.name
+                    })
+                    .style("fill", "#555")
+                    .style("font-family", "Arial")
+                    .style("font-size", 12);
+                */
+                var anchorNodes = svg.selectAll("g.anchorNode").data(force2.nodes()).enter().append("svg:g").attr("class", "anchorNode");
+                anchorNodes.append("svg:circle")
+                    .attr("r", 0)
+                    .style("fill", "#FFF");
+                anchorNodes.append("svg:text")
+                    .attr('dx', 25)
+                    .attr('dy', '.45em').
+                text(function(d, i) {
+                    return i % 2 == 0 ? "" :d.node.name;
+                }).call(wrap,50)
+                    .call(drag)
+                    .on('mouseenter', nodeMouseEnter) // Mouse enter show label and neighbours
+                    .on('mouseleave', nodeMouseLeave) // Reset label and neighbours
+                 ;
+                    /*.style("fill", "#555")
+                    .style("font-family", "Arial")
+                    .style("font-size", 12)*/
+                function updateNode() {
+                    this.attr("transform", function (d) {
+                        if (d.x && d.y)
+                            return "translate(" + d.x + "," + d.y + ")";
+                        else return;
+                    })
+                }
+                var updateLink = function() {
+                    this.attr("x1", function(d) {
+                        return d.source.x;
+                    }).attr("y1", function(d) {
+                        return d.source.y;
+                    }).attr("x2", function(d) {
+                        return d.target.x;
+                    }).attr("y2", function(d) {
+                        return d.target.y;
+                    });
+
+                }
                 // Force step
                 force.on('tick', function () {
-                    nodesContainer
-                        .attr('transform', function (d) {
-                            return 'translate(' + d.x + ',' + d.y + ')';
-                        });
+                    force2.start();
+                    // label placement
+                    anchorNodes.each(function(d, i) {
+                        if(i % 2 == 0) {
+                            d.x = d.node.x;
+                            d.y = d.node.y;
+                        } else {
+                            var b = this.childNodes[1].getBBox();
 
+                            var diffX = d.x - d.node.x;
+                            var diffY = d.y - d.node.y;
+
+                            var dist = Math.sqrt(diffX * diffX + diffY * diffY);
+
+                            var shiftX = b.width * (diffX - dist) / (dist * 2);
+                            shiftX = Math.max(-b.width, Math.min(0, shiftX));
+                            var shiftY = 5;
+                            this.childNodes[1].setAttribute("transform", "translate(" + shiftX + "," + shiftY + ")");
+                        }
+                    });
+
+                    nodesContainer.call(updateNode);
+                    anchorNodes.call(updateNode);
+
+                    //move label placement links
+                   anchorLink
+                       .selectAll('.anchorLink')
+                       .attr('d', function (d) {
+                           var dr = 0;
+                           return 'M' + d.source.x + ',' + d.source.y + 'A' + dr + ',' + dr + ' 0 0,1 ' + d.target.x + ',' + d.target.y;
+                       });
                     // Move links
                     linksContainer
                         .selectAll('.link')
@@ -104,6 +224,9 @@ angular.module('d3graph', [])
                             var dr = 0;
                             return 'M' + d.source.x + ',' + d.source.y + 'A' + dr + ',' + dr + ' 0 0,1 ' + d.target.x + ',' + d.target.y;
                         });
+
+                    //Move label placement links
+
 
                     // Move path of the link text
                     linksContainer
@@ -135,12 +258,13 @@ angular.module('d3graph', [])
                 initMarkers(svg, circleRadius, markerWidth, markerHeight);
                 // Start the force layout
                 force.start();
+                force2.start();
 
                 var api = {
-                    exportAsPNG: function(filename) {
+                    exportAsPNG: function (filename) {
                         exportAsPNG(filename, svg);
                     },
-                    exportAsSVG: function(filename) {
+                    exportAsSVG: function (filename) {
                         exportAsSVG(filename, svg);
                     }
                 };
@@ -163,6 +287,29 @@ angular.module('d3graph', [])
                 // Render container for graph
                 function renderGraphContainer(svg) {
                     return svg.append('g');
+                }
+
+                // Render anchor container for label placement
+                function renderAnchorNodes(container) {
+/*
+                    var anchorNodesContainer = container
+                        .append('g')
+                        .attr('id', 'anchorNodes')
+                        .selectAll("anchorNode")
+                        .data(force2.nodes())
+                        .enter()
+                        .append("svg:g")
+                        .attr("class", "anchorNode")
+                        .append("svg:circle").attr("r", 0).style("fill", "#FFF")
+                        .append("svg:text").text(function (d, i) {
+                            //return d.node.name;
+                            return i % 2 == 0 ? "" : d.node.name
+                        })
+                        .style("fill", "#555")
+                        .style("font-family", "Arial")
+                        .style("font-size", 12);
+                    return anchorNodesContainer;
+                    */
                 }
 
                 // Render the nodes
@@ -214,14 +361,15 @@ angular.module('d3graph', [])
                         });
 
                     // Node text, shown on mouseover
-                    nodesContainer.append('text')
-                        .attr('dx', 25)
-                        .attr('dy', '.45em')
-                        .attr('class', 'node text')
-                        .text(function (d) {
-                            return d.name;
-                        })
-                        .style('visibility', 'hidden');
+                    /* nodesContainer.append('text')
+                     .attr('dx', 25)
+                     .attr('dy', '.45em')
+                     .attr('class', 'node text')
+                     .text(function (d) {
+                     return d.name;
+                     })
+                     .call(wrap, 50)*/
+                    //.style('visibility', 'hidden');
 
                     return nodesContainer;
                 }
@@ -334,6 +482,7 @@ angular.module('d3graph', [])
 
                     d3.select(this).classed('dragging', true);
                     force.start();
+                    force2.start();
                 }
 
                 // Dragging
@@ -356,13 +505,13 @@ angular.module('d3graph', [])
                         .style('visibility', 'visible');
 
                     // Hide all nodes that are not neighbours of the selected node
-                    nodesContainer.style('opacity', function(node) {
+                    nodesContainer.style('opacity', function (node) {
                         // Is there a connection between nodes?
                         return nodeNeighbours[selectedNode.id + ',' + node.id] || nodeNeighbours[node.id + ',' + selectedNode.id] ? 1 : 0;
                     });
 
                     // Hide all links that don't connect to the selected node
-                    linksContainer.style('opacity', function(link) {
+                    linksContainer.style('opacity', function (link) {
                         // Selected node target or source?
                         return selectedNode.id === link.source.id || selectedNode.id === link.target.id ? 1 : 0;
                     });
@@ -393,7 +542,7 @@ angular.module('d3graph', [])
                     }
                     // Background color depends on selection boolean
                     d3.select(this).select('.node .background')
-                        .style('fill', function() {
+                        .style('fill', function () {
                             return node.selected ? 'red' : node.color;
                         });
 
@@ -472,12 +621,40 @@ angular.module('d3graph', [])
                 function exportAsSVG(filename, svg) {
                     saveAs(getSVGBlob(svg), filename + '.svg');
                 }
+
                 //TODO export as PDF
 
                 /*
                  * Utility functions
                  * Centering graph, etc.
                  */
+                //wrap text
+                //http://bl.ocks.org/mbostock/7555321
+                function wrap(text, width) {
+                    text.each(function () {
+                        var text = d3.select(this),
+                            words = text.text().split(/\s+/).reverse(),
+                            word,
+                            line = [],
+                            lineNumber = 0,
+                            lineHeight = 0.3, // ems
+                            y = text.attr("y"),
+                            dy = parseFloat(text.attr("dy")),
+                            tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+                        while (word = words.pop()) {
+                            line.push(word);
+                            tspan.text(line.join(" "));
+                            if (tspan.node().getComputedTextLength() > width) {
+                                line.pop();
+                                tspan.text(line.join(" "));
+                                line = [word];
+                                tspan = text.append("tspan").attr("x", 25).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+                                console.log(text);
+                            }
+                        }
+                    });
+                }
+
                 // Center graph
                 function centerGraph() {
                     //no molecules, nothing to do
