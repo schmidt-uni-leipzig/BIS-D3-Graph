@@ -17,7 +17,7 @@ angular.module('d3graph', [])
                     circleRadius = 10,
                     markerWidth = 5,
                     markerHeight = 8;
-
+                var c20 = d3.scale.category20();
                 var xScale = d3.scale.linear()
                     .domain([0, width]).range([0, width]);
                 var yScale = d3.scale.linear()
@@ -25,21 +25,21 @@ angular.module('d3graph', [])
 
                 var nodes = scope.data.nodes;
                 var links = scope.data.edges;
+                var gc = [];
 
                 // Create object with every neighbour
                 var adjacencyMatrix = {};
                 var _nodeNeighbours = [];
 
                 // Every node is a neighbour of himself
-                nodes.forEach(function(node) {
+                nodes.forEach(function (node) {
                     adjacencyMatrix[[node.id, node.id]] = true;
                 });
 
                 // Create neighbours by links
-                links.forEach(function(edge) {
-                    adjacencyMatrix[[edge.source, + edge.target]] = true;
+                links.forEach(function (edge) {
+                    adjacencyMatrix[[edge.source, +edge.target]] = true;
                 });
-
 
                 // Array of selected nodes
                 var selectedNodes = [];
@@ -50,7 +50,16 @@ angular.module('d3graph', [])
                  Utility Section
                  Define force layout, drag, zoom
                  */
-
+                var groups = groupNodes(nodes);
+                var groupPath = function(d) {
+                    var test = d3.values(d,function(i){return i.x});
+                    console.log(test);
+                    //return "M" +
+                     //   d3.geom.hull(d.values.map(function(i) { return [i.x, i.y]; }))
+                      //      .join("L")
+                       // + "Z";
+                };
+                groupPath(groups[0]);
                 // Force layout
                 var force = d3.layout.force()
                     .size([width, height])
@@ -92,9 +101,24 @@ angular.module('d3graph', [])
                 var container = renderGraphContainer(svg);
                 var linksContainer = renderLinks(container);
                 var nodesContainer = renderNodes(container);
-
+                var node = svg.selectAll(".node"),
+                    link = svg.selectAll(".link");
+                console.log(force.nodes())
                 // Force step
                 force.on('tick', function () {
+                    var verts = [];
+                    for (var i = 0; i < force.nodes().length; i++) {
+                        if (force.nodes()[i].group === 0)
+                            if (force.nodes()[i].x && force.nodes()[i].y) {
+                                verts.push([parseInt(force.nodes()[i].x) + 20, parseInt(force.nodes()[i].y) + 20])
+                                verts.push([parseInt(force.nodes()[i].x) - 20, parseInt(force.nodes()[i].y) - 20])
+                                verts.push([parseInt(force.nodes()[i].x) - 20, parseInt(force.nodes()[i].y) + 20])
+                                verts.push([parseInt(force.nodes()[i].x) + 20, parseInt(force.nodes()[i].y) - 20])
+                            }
+                    };
+                    //hull.datum(d3.geom.hull(verts)).attr("d", function (d) {
+                    //    return "M" + d.join("L") + "Z";
+                    //});
                     nodesContainer
                         .attr('transform', function (d) {
                             return 'translate(' + d.x + ',' + d.y + ')';
@@ -140,13 +164,13 @@ angular.module('d3graph', [])
                 force.start();
 
                 var api = {
-                    exportAsPNG: function(filename) {
+                    exportAsPNG: function (filename) {
                         exportAsPNG(filename, svg);
                     },
-                    exportAsSVG: function(filename) {
+                    exportAsSVG: function (filename) {
                         exportAsSVG(filename, svg);
                     },
-                    exportAsPDF: function(filename) {
+                    exportAsPDF: function (filename) {
                         exportAsPDF(filename, svg);
                     }
                 };
@@ -226,8 +250,8 @@ angular.module('d3graph', [])
                         .attr('class', 'node text')
                         .text(function (d) {
                             return d.name;
-                        }).call(wrap,50);
-                        //.style('visibility', 'hidden');
+                        }).call(wrap, 50);
+                    //.style('visibility', 'hidden');
 
                     return nodesContainer;
                 }
@@ -320,6 +344,25 @@ angular.module('d3graph', [])
                         svg.call(zoom);
                         return;
                     }
+                    if (d3.event.keyCode === 71) { //g key
+                        //group nodes
+                        //for (var i = 0; i < Object.size(groups) - 1; i++) {
+                        for (var i = 0; i < Object.size(groups) - 1; i++) {
+                            var grpName = "";
+                            var rndColor = c20(Math.floor(Math.random() * (19 - 0 + 1)) + 0);
+                            for (var u = 0; u < groups[i].length; u++) {
+                                grpName += groups[i][u].name + " /";
+                            }
+                            grpName = grpName.slice(0, grpName.length - 2)
+                            toggleGroup({
+                                id: 100 + i,
+                                name: "Gruppe: " + grpName,
+                                size: 2,
+                                color: rndColor
+                            }, i)
+                        }
+                        updateForceLayout();
+                    }
                 }
 
                 // KeyUp
@@ -337,7 +380,6 @@ angular.module('d3graph', [])
                 function dragStarted() {
                     /*jshint validthis: true */
                     d3.event.sourceEvent.stopPropagation();
-
                     d3.select(this).classed('dragging', true);
                     force.start();
                 }
@@ -362,13 +404,13 @@ angular.module('d3graph', [])
                         .style('visibility', 'visible');
 
                     // Hide all nodes that are not neighbours of the selected node
-                    nodesContainer.style('opacity', function(node) {
+                    nodesContainer.style('opacity', function (node) {
                         // Is there a connection between nodes?
                         return adjacencyMatrix[[selectedNode.id, node.id]] || adjacencyMatrix[[node.id, selectedNode.id]] ? 1 : 0;
                     });
 
                     // Hide all links that don't connect to the selected node
-                    linksContainer.style('opacity', function(link) {
+                    linksContainer.style('opacity', function (link) {
                         // Selected node target or source?
                         return selectedNode.id === link.source.id || selectedNode.id === link.target.id ? 1 : 0;
                     });
@@ -399,7 +441,7 @@ angular.module('d3graph', [])
                     }
                     // Background color depends on selection boolean
                     d3.select(this).select('.node .background')
-                        .style('fill', function() {
+                        .style('fill', function () {
                             return node.selected ? 'red' : node.color;
                         });
 
@@ -463,7 +505,7 @@ angular.module('d3graph', [])
                  */
                 // Export the graph as a PNG
                 function exportAsPNG(fileName, svg) {
-                    getCanvasWithImage(svg, function(canvas) {
+                    getCanvasWithImage(svg, function (canvas) {
                         canvas.toBlob(function (blob) {
                             saveAs(blob, fileName + '.png');
                         });
@@ -478,7 +520,7 @@ angular.module('d3graph', [])
                 // Export the graph as a PDF
                 function exportAsPDF(filename, svg) {
                     var pdf = new jsPDF('landscape');
-                    getCanvasWithImage(svg, function(canvas) {
+                    getCanvasWithImage(svg, function (canvas) {
                         var imgData = canvas.toDataURL('image/png');
                         pdf.addImage(imgData, 'PNG', 0, 0);
                         pdf.save(filename + '.pdf');
@@ -489,6 +531,189 @@ angular.module('d3graph', [])
                  * Utility functions
                  * Centering graph, etc.
                  */
+
+                function updateForceLayout() {
+                    //Data JOIN
+                    var link = svg.selectAll(".link").data(links, function (d) {
+                        return d.source.id + "-" + d.target.id;
+                    });
+
+                    //ENTER
+                    link.enter()
+                        .append('g')
+                        .attr('class', 'link');
+                    link
+                        .append('path')
+                        .attr('class', 'link')
+                        //.attr('marker-end', 'url(#offset)')
+                        .attr('marker-end', function (d) {
+                            if (d.target.size)
+                                return 'url(#offset)';
+                            else
+                                return 'url(#end)';
+                        })
+                        .style('stroke', function (d) {
+                            return d.color || '#777';
+                        })
+                        .style({
+                            'stroke-width': '2px',
+                            'stroke-dasharray': '2 2'
+                        });
+                    link.exit().remove();
+                    nodesContainer = nodesContainer.data(force.nodes(), function (d) {
+                        return d.id;
+                    });
+                    nodesContainer.enter().append('g')
+                        .attr('class', 'node')
+                        .call(drag) // Append node dragging
+                        .on('mouseenter', nodeMouseEnter) // Mouse enter show label and neighbours
+                        .on('mouseleave', nodeMouseLeave) // Reset label and neighbours
+                        .on('click', nodeClick);
+                    nodesContainer.append('circle')
+                        .attr('class', 'node background')
+                        .attr('r', function (d) {
+                            if (d.size)
+                                return d.size * circleRadius
+                            else
+                                return circleRadius
+                        })
+                        .style('fill', function (d) {
+                            return d.color || '#fff'; // default background color white
+                        });
+                    nodesContainer.append('text')
+                        .attr('class', 'node icon')
+                        .style({
+                            'text-anchor': 'middle',
+                            'dominant-baseline': 'central',
+                            'font-family': 'FontAwesome',
+                            'font-size': '13px'
+                        })
+                        .text(function (d) {
+                            return d.type;
+                        })
+                    nodesContainer.append('circle')
+                        .attr('class', 'node foreground')
+                        .attr('r', function (d) {
+                            if (d.size)
+                                return d.size * circleRadius
+                            else
+                                return circleRadius
+                        })
+                        .style({
+                            'fill': 'transparent',
+                            'stroke': '#444',
+                            'stroke-width': '1px',
+                            'cursor': 'default'
+                        });
+
+                    // Node text, shown on mouseover
+                    nodesContainer.append('text')
+                        .attr('dx', 25)
+                        .attr('dy', '.45em')
+                        .attr('class', 'node text')
+                        .text(function (d) {
+                            return d.name;
+                        }).call(wrap, 80);
+                    //.style('visibility', 'hidden');
+                    nodesContainer.exit().remove();
+                    force.start();
+                }
+
+                function removeNodesByGroupID(groupID) {
+                    //links.splice(1, 1);
+                    var groupNodes = groups[groupID];
+                    for (var n = 0; n < groupNodes.length; n++) {
+                        removeNodeByName(groupNodes[n].name);
+                    }
+                }
+
+                function removeAttachedLinksByIndex(i) {
+                    var newLinks = links;
+                    for (var l = 0; l < links.length; l++) {
+                        if (i == links[l].source.id || i == links[l].target.id) {
+                            newLinks.splice(l, 1);
+                        }
+                        ;
+                    }
+                    links = newLinks;
+                }
+
+                function removeNodeByIndex(i) {
+                    nodes.splice(i, 1);
+                    removeAttachedLinksByIndex(i);
+                }
+
+                function removeAttachedLinksByName(n) {
+                    var newLinks = links;
+                    for (var l = 0; l < links.length; l++) {
+                        if (n === links[l].source.name || n == links[l].target.name) {
+                            newLinks.splice(l, 1);
+                        }
+                        ;
+                    }
+                    links = newLinks;
+                }
+
+                function removeNodeByName(n) {
+                    var newNodes = nodes;
+                    for (var i = 0; i < nodes.length; i++) {
+                        if (getName(nodes[i]) == n) {
+                            newNodes.splice(i, 1);
+                        }
+                    }
+                    nodes = newNodes;
+
+                }
+
+                function toggleGroup(n, i) {
+
+                    removeNodesByGroupID(i);
+                    var relatedLinks = [];
+                    //find related links
+                    groups[i].forEach(function (node) {
+                        for (var l = 0; l < links.length; l++) {
+                            if (node.name === links[l].source.name) {
+                                links[l].source = n;
+                            }
+                            if (node.name == links[l].target.name) {
+                                links[l].target = n;
+                            }
+                        }
+
+                    })
+                    nodes.push(n)
+                    links = links.concat(relatedLinks);
+                }
+
+                function groupNodes(n) {
+                    var nodes = n;
+                    var gm = {};
+
+                    var groupsExpanded = {};
+                    for (var n = 0; n < nodes.length; n++) {
+                        if (!gm[getGroup(nodes[n])]) {
+                            gm[getGroup(nodes[n])] = [];
+                            groupsExpanded[getGroup(nodes[n])] = false;
+                            gc.push(c20(Math.floor(Math.random() * (19 - 0 + 1)) + 0))
+                        }
+                        gm[getGroup(nodes[n])].push(nodes[n]);
+                    }
+                    return gm;
+                }
+
+                //get node group
+                function getGroup(n) {
+                    return n.group;
+                }
+
+                function getID(n) {
+                    return n.id;
+                }
+
+                function getName(n) {
+                    return n.name;
+                }
+
                 //wrap text
                 //http://bl.ocks.org/mbostock/7555321
                 function wrap(text, width) {
@@ -514,6 +739,7 @@ angular.module('d3graph', [])
                         }
                     });
                 }
+
                 // Center graph
                 function centerGraph() {
                     //no molecules, nothing to do
@@ -604,14 +830,24 @@ angular.module('d3graph', [])
                 function initMarkers(svg, circleRadius, markerWidth, markerHeight) {
                     svg.append('svg:defs')
                         .selectAll('marker')
-                        .data(['end'])      // Different link/path types can be defined here
+                        .data([{name: 'end', refY: (-Math.sqrt(circleRadius) + 3.12), refX: 21}, {
+                            name: 'offset',
+                            refY: (-Math.sqrt(circleRadius) + 3.12),
+                            refX: 30
+                        }])      // Different link/path types can be defined here
                         .enter().append('svg:marker')    // This section adds in the arrows
                         .attr('id', function (d) {
-                            return d;
+                            return d.name;
                         })
                         .attr('viewBox', '0 -5 10 10')
-                        .attr('refX', 21)
-                        .attr('refY', -Math.sqrt(circleRadius) + 3.12)
+                        //.attr('refX', 21)
+                        .attr('refX', function (d) {
+                            return d.refX;
+                        })
+                        //.attr('refY', -Math.sqrt(circleRadius) + 3.12)
+                        .attr('refY', function (d) {
+                            return d.refY;
+                        })
                         .attr('markerWidth', markerWidth)
                         .attr('markerHeight', markerHeight)
                         .attr('orient', 'auto')
@@ -619,24 +855,25 @@ angular.module('d3graph', [])
                         .attr('d', 'M0,-5L10,0L0,5');
                 }
 
+
                 // Show the connected path between two nodes
                 function showConnectedPath(source, end) {
                     var paths = [];
                     traverse(source.id, paths);
 
                     // Get path with fitting end
-                    paths = paths.filter(function(path) {
+                    paths = paths.filter(function (path) {
                         return path[path.length - 1] === end.id;
                     });
 
                     // Flatten paths
-                    paths = [].concat.apply([], paths).filter(function(item, pos, self) {
+                    paths = [].concat.apply([], paths).filter(function (item, pos, self) {
                         return self.indexOf(item) === pos;
                     });
 
                     linksContainer
                         .selectAll('.link')
-                        .style('opacity', function(d) {
+                        .style('opacity', function (d) {
                             return paths.indexOf(d.source.id) !== -1 && paths.indexOf(d.target.id) !== -1 ? 1 : 0.2;
                         });
                 }
@@ -669,6 +906,15 @@ angular.module('d3graph', [])
                         next = queue.shift();
                     }
                 }
+
+                Object.size = function (obj) {
+                    var size = 0, key;
+                    for (key in obj) {
+                        if (obj.hasOwnProperty(key)) size++;
+                    }
+                    return size;
+                };
             }
         };
-    });
+    })
+;
