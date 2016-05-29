@@ -215,7 +215,7 @@ angular.module('d3graph', [])
                         })
                         .text(function (d) {
                             return d.type;
-                        });
+                        })
 
                     // Actual node
                     nodesContainer.append('circle')
@@ -235,8 +235,8 @@ angular.module('d3graph', [])
                         .attr('class', 'node text')
                         .text(function (d) {
                             return d.name;
-                        })
-                        .style('visibility', 'hidden');
+                        }).call(wrap,50);
+                        //.style('visibility', 'hidden');
 
                     return nodesContainer;
                 }
@@ -516,6 +516,31 @@ angular.module('d3graph', [])
                  * Utility functions
                  * Centering graph, etc.
                  */
+                //wrap text
+                //http://bl.ocks.org/mbostock/7555321
+                function wrap(text, width) {
+                    text.each(function () {
+                        var text = d3.select(this),
+                            words = text.text().split(/\s+/).reverse(),
+                            word,
+                            line = [],
+                            lineNumber = 0,
+                            lineHeight = 0.2, // ems
+                            y = text.attr("y"),
+                            dy = parseFloat(text.attr("dy")),
+                            tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
+                        while (word = words.pop()) {
+                            line.push(word);
+                            tspan.text(line.join(" "));
+                            if (tspan.node().getComputedTextLength() > width) {
+                                line.pop();
+                                tspan.text(line.join(" "));
+                                line = [word];
+                                tspan = text.append("tspan").attr("x", 25).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
+                            }
+                        }
+                    });
+                }
                 // Center graph
                 function centerGraph() {
                     //no molecules, nothing to do
