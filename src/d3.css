@@ -11,7 +11,7 @@ rect {
   fill: #ddd;
 }
 
-rect.zoom {
+rect.select {
   stroke: steelblue;
   fill-opacity: 0.5;
 }

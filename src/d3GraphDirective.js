@@ -71,11 +71,19 @@ angular.module('d3graph', [])
                     .on("dragend", dragEnded);
 
                 // Zoom function
-                var zoom = d3.behavior.zoom()
-                    .scaleExtent([0.1, 10])
-                    .x(xScale)
-                    .y(yScale)
-                    .on('zoom', zoomed);
+                // Use closure to save old scale and old translation
+                // Needed to implement right click select
+                var zoom = (function() {
+                    var old = {};
+
+                    return d3.behavior.zoom()
+                        .scaleExtent([0.1, 10])
+                        .x(xScale)
+                        .y(yScale)
+                        .on('zoomstart', function() { zoomStarted(old); })
+                        .on('zoom', zoomed)
+                        .on('zoomend', function() { zoomEnded(old); });
+                })();
 
                 /*
                  Init Section
@@ -163,7 +171,8 @@ angular.module('d3graph', [])
                         .attr('height', height)
                         .style('border', '1px dashed black')
                         .call(zoom)
-                        .on('mousedown', rectZoom);
+                        .on('mousedown', rectZoom)
+                        .on('contextmenu', exportArea);
                 }
 
                 // Render container for graph
@@ -329,13 +338,29 @@ angular.module('d3graph', [])
                 }
 
                 // Zoom
+                function zoomStarted(old) {
+                    if (d3.event.sourceEvent.button !== 0) { // no left click
+                        old.translation = zoom.translate();
+                        old.scale = zoom.scale();
+                    }
+                }
+
                 function zoomed() {
+                    if (d3.event.sourceEvent.button !== 0) return; // no left click
                     container.attr('transform', 'translate(' + d3.event.translate + ')scale(' + d3.event.scale + ')');
+                }
+
+                function zoomEnded(old) {
+                    if (d3.event.sourceEvent.button !== 0) {
+                        zoom.translate(old.translation);
+                        zoom.scale(old.scale);
+                    }
                 }
 
                 // Drag started
                 function dragStarted() {
                     /*jshint validthis: true */
+                    if (d3.event.sourceEvent.button !== 0) return; // no left click
                     d3.event.sourceEvent.stopPropagation();
 
                     d3.select(this).classed('dragging', true);
@@ -345,12 +370,14 @@ angular.module('d3graph', [])
                 // Dragging
                 function dragged(d) {
                     /*jshint validthis: true */
+                    if (d3.event.sourceEvent.button !== 0) return; // no left click
                     d3.select(this).attr('cx', d.x = d3.event.x).attr('cy', d.y = d3.event.y);
                 }
 
                 // Drag ended
                 function dragEnded() {
                     /*jshint validthis: true */
+                    if (d3.event.sourceEvent.button !== 0) return; // no left click
                     d3.select(this).classed('dragging', false);
                 }
 
@@ -553,6 +580,56 @@ angular.module('d3graph', [])
                         .attr('version', 1.1)
                         .attr('xmlns', 'http://www.w3.org/2000/svg')
                         .node().parentNode.innerHTML;
+                }
+
+                // Export selected area
+                function exportArea() {
+                    d3.event.preventDefault();
+
+                    var e = this,
+                        origin = d3.mouse(e),
+                        rect = svg.append('rect').attr('class', 'select');
+
+                    origin[0] = Math.max(0, Math.min(width, origin[0]));
+                    origin[1] = Math.max(0, Math.min(height, origin[1]));
+
+                    d3.select(window)
+                        .on("mousemove.areaExport", function () {
+                            var m = d3.mouse(e);
+                            m[0] = Math.max(0, Math.min(width, m[0]));
+                            m[1] = Math.max(0, Math.min(height, m[1]));
+                            rect.attr("x", Math.min(origin[0], m[0]))
+                                .attr("y", Math.min(origin[1], m[1]))
+                                .attr("width", Math.abs(m[0] - origin[0]))
+                                .attr("height", Math.abs(m[1] - origin[1]));
+                        })
+                        .on("mouseup.areaExport", function () {
+                            d3.select(window).on("mousemove.areaExport", null).on("mouseup.areaExport", null);
+                            d3.select("body").classed("noselect", false);
+                            var m = d3.mouse(e);
+                            m[0] = Math.max(0, Math.min(width, m[0]));
+                            m[1] = Math.max(0, Math.min(height, m[1]));
+                            var viewBox = {
+                                x: Math.min(origin[0], m[0]),
+                                y: Math.min(origin[1], m[1]),
+                                width: Math.max(origin[0], m[0]) - Math.min(origin[0], m[0]),
+                                height: Math.max(origin[1], m[1]) - Math.min(origin[1], m[1])
+                            };
+
+                            rect.remove();
+                            var copied = d3.select('body')
+                                .append('div')
+                                .append('svg')
+                                .attr('id', 'copy')
+                                .attr('width', width)
+                                .attr('height', height)
+                                .style('display', 'none')
+                                .attr('viewBox', viewBox.x + ' ' + viewBox.y + ' ' + viewBox.width + ' ' + viewBox.height)
+                                .html(svg.html());
+                            exportAsSVG('test', copied);
+                            copied.node().parentNode.remove();
+                        }, true);
+                    d3.event.stopPropagation();
                 }
 
                 // Generates a canvas with an image from the svg
