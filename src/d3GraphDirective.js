@@ -33,7 +33,7 @@ angular.module('d3graph', [])
                 var gc = {};
                 var curve = d3.svg.line()
                     .interpolate("cardinal-closed")
-                    .tension(.85);
+                    .tension(0.85);
                 var grouped = false;
                 // Create object with every neighbour
                 var adjacencyMatrix = {};
@@ -129,11 +129,11 @@ angular.module('d3graph', [])
                         .attr("class", "hull")
                         .attr("d", drawCluster)
                         .style("fill", function (d) {
-                            return gc[d.group]
+                            return gc[d.group];
                         })
                         .style("opacity", "1")
                         .style("stroke", function (d) {
-                            return "#000000"
+                            return "#000000";
                         })
                         .style("stroke-opacity", "1.0")
                         .style("stroke-width", "1")
@@ -398,7 +398,7 @@ angular.module('d3graph', [])
                                     size: 2,
                                     color: gc[d3.keys(groups)[i]],
                                     tag: "group"
-                                }, d3.keys(groups)[i])
+                                }, d3.keys(groups)[i]);
                             }
                             updateForceLayout();
                         } else {
@@ -622,7 +622,7 @@ angular.module('d3graph', [])
                 function dissolveGroup(n) {
                     var newNodes = [];
                     var newLinks = [];
-                    return n.group
+                    return n.group;
 
 
                 }
@@ -665,7 +665,7 @@ angular.module('d3graph', [])
                     linksContainer.exit().remove();
 
                     nodesContainer = nodesContainer.data(nodes, function (d) {
-                        return d.id
+                        return d.id;
                     });
                     var nodeEnter = nodesContainer.enter().append('g')
                         .attr('class', 'node')
@@ -701,7 +701,7 @@ angular.module('d3graph', [])
                             if (d.size)
                                 return d.size * circleRadius;
                             else
-                                return circleRadius
+                                return circleRadius;
                         })
                         .style({
                             'fill': 'transparent',
@@ -748,7 +748,7 @@ angular.module('d3graph', [])
 
                     // create convex hulls
                     var hullset = [];
-                    for (i in hulls) {
+                    for (var i in hulls) {
                         hullset.push({group: i, path: d3.geom.hull(hulls[i])});
                     }
                     return hullset;
@@ -767,22 +767,22 @@ angular.module('d3graph', [])
                 function removeAttachedLinksByIndex(i) {
                     var delLinks = [];
                     for (var l = 0; l < links.length; l++) {
-                        if ((i == links[l].source.id || i == links[l].target.id)) {
+                        if ((i === links[l].source.id || i === links[l].target.id)) {
                             delLinks.push(l);
                         }
                     }
                     delLinks.reverse().forEach(function(i){
                         links.splice(i,1);
-                    })
+                    });
 
                 }
 
                 function removeAttachedLinksByName(name) {
                     var newLinks = links;
                     for (var l = 0; l < links.length; l++) {
-                        if (name === links[l].source.name || name == links[l].target.name) {
+                        if (name === links[l].source.name || name === links[l].target.name) {
                             newLinks.splice(l, 1);
-                        };
+                        }
                     }
                     links = newLinks;
                 }
@@ -790,7 +790,7 @@ angular.module('d3graph', [])
                 function removeNodeByName(n) {
                     var newNodes = nodes;
                     for (var i = 0; i < nodes.length; i++) {
-                        if (getName(nodes[i]) == n) {
+                        if (getName(nodes[i]) === n) {
                             newNodes.splice(i, 1);
                         }
                     }
@@ -833,7 +833,7 @@ angular.module('d3graph', [])
                         if (!gm[getGroup(nodes[n])]) {
                             gm[getGroup(nodes[n])] = [];
                             expandedGroups[getGroup(nodes[n])] = false;
-                            gc[getGroup(nodes[n])] = (c20(Math.floor(Math.random() * (19 + 1))))
+                            gc[getGroup(nodes[n])] = (c20(Math.floor(Math.random() * (19 + 1))));
                         }
                         gm[getGroup(nodes[n])].push(nodes[n]);
                     }
