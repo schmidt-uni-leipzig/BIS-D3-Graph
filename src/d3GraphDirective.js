@@ -514,8 +514,8 @@ angular.module('d3graph', [])
                 // Listener to reset state of node text to hidden
                 function nodeMouseLeave() {
                     /*jshint validthis: true */
-                    d3.select(this).select('.node .text')
-                        .style('visibility', 'hidden');
+                    d3.select(this).select('.node .text');
+                        //.style('visibility', 'hidden');
 
                     // Reset opacity of nodes and links
                     nodesContainer.style('opacity', 1);
