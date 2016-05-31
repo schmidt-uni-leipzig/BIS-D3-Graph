@@ -873,7 +873,7 @@ angular.module('d3graph', [])
                             word,
                             line = [],
                             lineNumber = 0,
-                            lineHeight = 0.2, // ems
+                            lineHeight = 0.19, // ems
                             y = text.attr("y"),
                             dy = parseFloat(text.attr("dy")),
                             tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
