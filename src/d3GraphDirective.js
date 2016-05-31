@@ -429,7 +429,7 @@ angular.module('d3graph', [])
                                 var srcNode = nodesMap.get(l.source.id);
                                 var trgNode = nodesMap.get(l.target.id);
                                 var newLink = l;
-                                newLink = {source: srcNode, target: trgNode};
+                                newLink = {source: srcNode, target: trgNode,text: l.text};
                                 links.push(newLink);
                             });
                             initHull();
@@ -672,6 +672,40 @@ angular.module('d3graph', [])
                         .style({
                             'stroke-width': '2px',
                             'stroke-dasharray': '2 2'
+                        });
+                    linkEnter
+                        .append('path')
+                        .attr({
+                            'class': 'link path',
+                            'fill-opacity': 0,
+                            'stroke-opacity': 0,
+                            'fill': 'blue',
+                            'stroke': 'red',
+                            'id': function (d, i) {
+                                return 'linkpath' + i;
+                            }
+                        })
+                        .style('pointer-events', 'none');
+                    linkEnter
+                        .append('text')
+                        .style('pointer-events', 'none')
+                        .attr({
+                            'class': 'link label',
+                            'id': function (d, i) {
+                                return 'linklabel' + i;
+                            },
+                            'dx': 80,
+                            'dy': 0,
+                            'font-size': 10,
+                            'fill': '#aaa'
+                        })
+                        .append('textPath')
+                        .attr('xlink:href', function (d, i) {
+                            return '#linkpath' + i;
+                        })
+                        .style("pointer-events", "none")
+                        .text(function (d) {
+                            return d.text;
                         });
                     linksContainer.exit().remove();
 
