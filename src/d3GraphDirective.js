@@ -39,7 +39,6 @@ angular.module('d3graph', [])
                 var adjacencyMatrix = {};
                 var _nodeNeighbours = [];
 
-                // Every node is a neighbour of himself
                 nodes.forEach(function (node) {
                     adjacencyMatrix[[node.id, node.id]] = true;
                 });
@@ -48,6 +47,7 @@ angular.module('d3graph', [])
                 links.forEach(function (edge) {
                     adjacencyMatrix[[edge.source, +edge.target]] = true;
                 });
+
 
                 // Array of selected nodes
                 var selectedNodes = [];
@@ -87,16 +87,20 @@ angular.module('d3graph', [])
                 // Zoom function
                 // Use closure to save old scale and old translation
                 // Needed to implement right click select
-                var zoom = (function() {
+                var zoom = (function () {
                     var old = {};
 
                     return d3.behavior.zoom()
                         .scaleExtent([0.1, 10])
                         .x(xScale)
                         .y(yScale)
-                        .on('zoomstart', function() { zoomStarted(old); })
+                        .on('zoomstart', function () {
+                            zoomStarted(old);
+                        })
                         .on('zoom', zoomed)
-                        .on('zoomend', function() { zoomEnded(old); });
+                        .on('zoomend', function () {
+                            zoomEnded(old);
+                        });
                 })();
 
                 /*
@@ -400,7 +404,6 @@ angular.module('d3graph', [])
                                     tag: "group"
                                 }, d3.keys(groups)[i]);
                             }
-                            updateForceLayout();
                         } else {
                             var deleteNodes = [];
                             var addNodes = [];
@@ -410,25 +413,29 @@ angular.module('d3graph', [])
                                 if (nodes[i].tag === "group") {
                                     deleteNodes.push(i);
                                     removeAttachedLinksByIndex(nodes[i].id);
-                                    addNodes.push(dissolveGroup(nodes[i]));
+                                    addNodes.push(nodes[i].group);
                                 }
                             }
-                            deleteNodes.reverse().forEach(function(i){
-                                nodes.splice(i,1);
+                            deleteNodes.reverse().forEach(function (i) {
+                                nodes.splice(i, 1);
                             });
-                            addNodes.forEach(function(n){
+                            addNodes.forEach(function (n) {
                                 nodes = nodes.concat(n);
                             });
-                            var nodesMap = d3.map(nodes, function(d) { return d.id; });
-                            originalLinks.forEach(function(l){
-                                var srcNode =nodesMap.get(l.source.id);
-                                var trgNode =nodesMap.get(l.target.id);
+                            var nodesMap = d3.map(nodes, function (d) {
+                                return d.id;
+                            });
+                            originalLinks.forEach(function (l) {
+                                var srcNode = nodesMap.get(l.source.id);
+                                var trgNode = nodesMap.get(l.target.id);
                                 var newLink = l;
-                                newLink ={source: srcNode, target: trgNode};
+                                newLink = {source: srcNode, target: trgNode};
                                 links.push(newLink);
                             });
                             initHull();
+
                         }
+                        updateAdjacencyMatrix()
                         updateForceLayout();
                         toggleGrouped();
                     }
@@ -619,12 +626,16 @@ angular.module('d3graph', [])
                  * Utility functions
                  * Centering graph, etc.
                  */
-                function dissolveGroup(n) {
-                    var newNodes = [];
-                    var newLinks = [];
-                    return n.group;
+                // Every node is a neighbour of himself
+                function updateAdjacencyMatrix() {
+                    nodes.forEach(function (node) {
+                        adjacencyMatrix[[node.id, node.id]] = true;
+                    });
 
-
+                    // Create neighbours by links
+                    links.forEach(function (edge) {
+                        adjacencyMatrix[[edge.source.id, +edge.target.id]] = true;
+                    });
                 }
 
                 function toggleGrouped() {
@@ -650,7 +661,7 @@ angular.module('d3graph', [])
                         .attr('class', 'link')
                         //.attr('marker-end', 'url(#offset)')
                         .attr('marker-end', function (d) {
-                            if (d.target.size)
+                            if (!d.target.tag === "group")
                                 return 'url(#offset)';
                             else
                                 return 'url(#end)';
@@ -771,8 +782,8 @@ angular.module('d3graph', [])
                             delLinks.push(l);
                         }
                     }
-                    delLinks.reverse().forEach(function(i){
-                        links.splice(i,1);
+                    delLinks.reverse().forEach(function (i) {
+                        links.splice(i, 1);
                     });
 
                 }
@@ -802,8 +813,8 @@ angular.module('d3graph', [])
                     removeNodesByGroupID(i);
                     expandedGroups[i] = true;
                     n.group = groups[i];
-                    n.x=groups[i][0].x;
-                    n.y=groups[i][0].y;
+                    n.x = groups[i][0].x;
+                    n.y = groups[i][0].y;
 
                     //find related links
                     groups[i].forEach(function (node) {
