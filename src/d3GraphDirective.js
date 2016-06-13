@@ -58,8 +58,6 @@
                     // Array of selected nodes
                     var selectedNodes = [];
 
-                    var isRectZoom = false;
-
                     /*
                      Utility Section
                      Define force layout, drag, zoom
@@ -244,7 +242,6 @@
                             .attr('height', height)
                             .style('border', '1px dashed black')
                             .call(zoom)
-                            .on('mousedown', rectZoom)
                             .on('contextmenu', contextMenu);
                     }
 
@@ -391,17 +388,6 @@
                             return;
                         }
 
-                        if (d3.event.keyCode === 82) { // r key
-                            //exportGraph();
-                            isRectZoom = !isRectZoom; // toggle rectZoom
-                            if (isRectZoom) {
-                                zoom.on('zoom', null);
-                            } else {
-                                zoom.on('zoom', zoomed); //TODO bug with panning during disable
-                            }
-                            svg.call(zoom);
-                            return;
-                        }
                         if (d3.event.keyCode === 71) { //g key
                             // -1 because last one is group undefined
                             if (!grouped) {
@@ -571,50 +557,6 @@
                                 .selectAll('.link')
                                 .style('opacity', 1);
                         }
-                    }
-
-                    // Zoom the graph by selecting an area
-                    //TODO
-                    function rectZoom() {
-                        /*jshint validthis: true */
-                        if (!isRectZoom) return;
-                        var e = this,
-                            origin = d3.mouse(e),
-                            rect = svg.append('rect').attr('class', 'zoom');
-
-                        origin[0] = Math.max(0, Math.min(width, origin[0]));
-                        origin[1] = Math.max(0, Math.min(height, origin[1]));
-
-                        d3.select(window)
-                            .on("mousemove.zoomRect", function () {
-                                var m = d3.mouse(e);
-                                m[0] = Math.max(0, Math.min(width, m[0]));
-                                m[1] = Math.max(0, Math.min(height, m[1]));
-                                rect.attr("x", Math.min(origin[0], m[0]))
-                                    .attr("y", Math.min(origin[1], m[1]))
-                                    .attr("width", Math.abs(m[0] - origin[0]))
-                                    .attr("height", Math.abs(m[1] - origin[1]));
-                            })
-                            .on("mouseup.zoomRect", function () {
-                                d3.select(window).on("mousemove.zoomRect", null).on("mouseup.zoomRect", null);
-                                d3.select("body").classed("noselect", false);
-                                var m = d3.mouse(e);
-                                m[0] = Math.max(0, Math.min(width, m[0]));
-                                m[1] = Math.max(0, Math.min(height, m[1]));
-                                if (m[0] !== origin[0] && m[1] !== origin[1]) {
-                                    zoom.x(xScale.domain([origin[0], m[0]].sort()))
-                                        .y(yScale.domain([origin[1], m[1]].map(yScale.invert).sort()));
-                                }
-                                rect.remove();
-                                //container.attr('transform', 'translate(100,100)scale(3)');
-                                //container.attr('transform', 'translate(100,100)scale(3)');
-                                zoom.on('zoom', zoomed);
-                                svg.call(zoom);
-                                zoom.event(svg);
-
-                            }, true);
-                        d3.event.stopPropagation();
-
                     }
 
                     /*
