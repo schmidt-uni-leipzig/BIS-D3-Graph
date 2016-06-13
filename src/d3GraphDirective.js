@@ -965,15 +965,7 @@
 
                     // Get the BLOB of the SVG. Used for API functions.
                     function getSVGBlob(svg) {
-                        return new Blob([getSVGHtml(svg)], {type: 'image/svg+xml'});
-                    }
-
-                    // Get the html of the svg. Used for API functions.
-                    function getSVGHtml(svg) {
-                        return svg
-                            .attr('version', 1.1)
-                            .attr('xmlns', 'http://www.w3.org/2000/svg')
-                            .node().parentNode.innerHTML;
+                        return new Blob([new XMLSerializer().serializeToString(svg.node())], {type: 'image/svg+xml'});
                     }
 
                     // Context menu
@@ -1024,7 +1016,6 @@
                                         .attr('id', 'copy')
                                         .attr('width', width)
                                         .attr('height', height)
-                                        .style('display', 'none')
                                         .attr('viewBox', viewBox.x + ' ' + viewBox.y + ' ' + viewBox.width + ' ' + viewBox.height)
                                         .html(svg.html());
 
@@ -1051,8 +1042,6 @@
 
                     // Generates a canvas with an image from the svg
                     function getCanvasWithImage(svg, cb) {
-                        var html = getSVGHtml(svg);
-
                         var appeneded = d3.select('body').append('canvas')
                             .attr('width', width)
                             .attr('height', height)
@@ -1060,7 +1049,8 @@
                         var canvas = document.querySelector("canvas"),
                             context = canvas.getContext("2d");
 
-                        var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(html))); //TODO alternative for unescape
+                        var xml = new XMLSerializer().serializeToString(svg.node());
+                        var imgsrc = 'data:image/svg+xml;,' + encodeURIComponent( xml );
                         var image = new Image();
                         image.src = imgsrc;
                         image.onload = function () {
