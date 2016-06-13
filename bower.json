@@ -1,5 +1,5 @@
 {
-  "name": "BIS-D3-Graph",
+  "name": "bis-d3-graph",
   "homepage": "https://github.com/k4l4m/BIS-D3-Graph",
   "description": "BIS Project. Directive for angularjs using D3 to visualize and control graphs.",
   "moduleType": [],
