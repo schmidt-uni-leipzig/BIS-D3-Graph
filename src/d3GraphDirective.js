@@ -453,19 +453,19 @@
 
                     // Zoom
                     function zoomStarted(old) {
-                        if (d3.event.sourceEvent.button !== 0) { // no left click
+                        if (d3.event.sourceEvent && d3.event.sourceEvent.button !== 0) { // no left click
                             old.translation = zoom.translate();
                             old.scale = zoom.scale();
                         }
                     }
 
                     function zoomed() {
-                        if (d3.event.sourceEvent.button !== 0) return; // no left click
+                        if (d3.event.sourceEvent && d3.event.sourceEvent.button !== 0) return; // no left click
                         container.attr('transform', 'translate(' + d3.event.translate + ')scale(' + d3.event.scale + ')');
                     }
 
                     function zoomEnded(old) {
-                        if (d3.event.sourceEvent.button !== 0) {
+                        if (d3.event.sourceEvent && d3.event.sourceEvent.button !== 0) {
                             zoom.translate(old.translation);
                             zoom.scale(old.scale);
                         }

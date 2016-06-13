@@ -10,6 +10,16 @@ Run `npm install && bower install` to install dependencies and develop tools.
 ## Build
 Run `grunt build` to build and minify a library for production usage.
 
+## Run examples
+- Clone project (or download zip file)
+- Go to directory and download bower dependencies. `bower install`
+- Open examples in example directory
+
+## Online examples
+- [Standard](http://k4l4m.github.io/BIS-D3-Graph/examples/index.html)
+- [Big graph](http://k4l4m.github.io/BIS-D3-Graph/examples/big-graph.html)
+- [Node click longtext](http://k4l4m.github.io/BIS-D3-Graph/examples/node-click-longtext.html)
+
 ## Tasks
 - Analyse current implementation
 - Create AngularJS directive which covers functionalities
