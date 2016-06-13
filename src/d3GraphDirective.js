@@ -5,7 +5,7 @@
 
     /*global angular, d3, jsPDF */
     angular.module('d3graph', [])
-        .directive('d3Graph', function ($log) {
+        .directive('d3Graph', function ($rootScope, $log) {
             return {
                 restrict: 'E',
                 template: '<svg id="d3Graph"></svg>',
@@ -50,7 +50,9 @@
                     });
 
                     // Options setting
-                    var filename = scope.options.filename || 'graph';
+                    var options = {};
+                    options.filename = scope.options.filename || 'graph';
+                    options.nodeClickCb = scope.options.nodeClickCb || function() {};
 
 
                     // Array of selected nodes
@@ -158,9 +160,9 @@
 
                     function createContextMenu(svg) {
                         var data = [
-                            {name: 'SVG', fn: function() { exportAsSVG(filename, svg); }},
-                            {name: 'PDF', fn: function() { exportAsPDF(filename, svg); }},
-                            {name: 'PNG', fn: function() { exportAsPNG(filename, svg); }}
+                            {name: 'SVG', fn: function() { exportAsSVG(options.filename, svg); }},
+                            {name: 'PDF', fn: function() { exportAsPDF(options.filename, svg); }},
+                            {name: 'PNG', fn: function() { exportAsPNG(options.filename, svg); }}
                         ];
 
                         var contextMenu = d3.select('body')
@@ -554,6 +556,10 @@
                             .style('fill', function () {
                                 return node.selected ? 'red' : node.color;
                             });
+
+                        options.nodeClickCb(selectedNodes); // Call options cb
+                        $rootScope.$digest(); // Apply digest cycle
+
 
                         // Show the connected pathes
                         if (selectedNodes.length === 2) {

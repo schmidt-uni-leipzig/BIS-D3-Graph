@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="basic">
+<head>
+    <meta charset="UTF-8">
+    <title>Node click example</title>
+    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../src/d3.css">
+</head>
+<body ng-controller="BasicCtrl">
+<d3-graph data="data" options="options"></d3-graph>
+<div>
+    <div ng-repeat="node in selectedNodes">
+        <h3>{{node.name}}</h3>
+        <p>{{node.longText}}</p>
+    </div>
+</div>
+<script src="../bower_components/FileSaver/FileSaver.js"></script>
+<script src="../bower_components/jspdf/dist/jspdf.min.js"></script>
+<script src="../bower_components/d3/d3.js"></script>
+<script src="../bower_components/angular/angular.js"></script>
+<script src="../src/d3GraphDirective.js"></script>
+<script>
+    var app = angular.module('basic', ['d3graph']);
+
+    app.controller('BasicCtrl', function($scope) {
+        $scope.data = {
+            nodes: [
+                {
+                    id: 0,
+                    name: "Node1",
+                    color: "#fff",
+                    type: '\uf0f6',
+                    longText: "Ein ganz besonders langer Text",
+                    group: 0,
+                    phase: "Planung"
+                },
+                {
+                    id: 1,
+                    name: "Node2",
+                    color: "#fff",
+                    type: '\uf0f6',
+                    longText: "Ein noch längerer Text",
+                    group: 0
+                },
+                {
+                    id: 2,
+                    name: "Node3 long text example",
+                    color: "#fff",
+                    type: '\uf0f6',
+                    longText: "Ein noch längerer Text Teil II",
+                    group: 0
+                },
+                {
+                    id: 3,
+                    name: "Node4",
+                    color: "#fff",
+                    type: '\uf0f6',
+                    longText: "Ein noch längerer Text Teil II",
+                    group: 0
+                },
+                {
+                    id: 4,
+                    name: 'Node 5',
+                    group:2
+                },
+                {
+                    id: 5,
+                    name: 'Node 6',
+                    group:2
+                },
+                {
+                    id: 6,
+                    name: 'Node 7'
+                },
+                {
+                    id: 7,
+                    name: 'Node 8'
+                }
+            ],
+            edges: [
+                {
+                    source: 0,
+                    target: 1,
+                    text: "Relates to",
+                    color: "#777"
+                },
+                {
+                    source: 0,
+                    target: 2,
+                    text: "Relates to",
+                    color: "#777"
+                },
+                {
+                    source: 6,
+                    target: 5
+                },
+                {
+                    source: 2,
+                    target: 5
+                },
+                {
+                    source: 3,
+                    target: 4
+                },
+                {
+                    source: 3,
+                    target: 5
+                },
+                {
+                    source: 4,
+                    target: 5
+                },
+                {
+                    source: 3,
+                    target: 2
+                },
+                {
+                    source: 0,
+                    target: 7
+                },
+                {
+                    source: 7,
+                    target: 4
+                }
+
+            ]
+        };
+
+        $scope.selectedNodes = [];
+
+        $scope.options = {
+            nodeClickCb: function(nodes) {
+                $scope.selectedNodes = nodes;
+            }
+        };
+    });
+</script>
+</body>
+</html>
