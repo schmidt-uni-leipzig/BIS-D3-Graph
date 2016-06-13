@@ -5,7 +5,7 @@
 
 describe('Directive: d3GraphDirective', function() {
     var scope, element, $compile,
-        template = '<d3-graph data="data"></d3-graph>';
+        template = '<d3-graph data="data" options="options"></d3-graph>';
 
     function createDirective() {
         var elem;
@@ -60,6 +60,8 @@ describe('Directive: d3GraphDirective', function() {
                 }
             ]
         };
+
+        scope.options = {};
 
         elem = angular.element(template);
         angular.element(document.body).prepend(elem);
