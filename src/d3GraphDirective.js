@@ -11,20 +11,20 @@
                 template: '<svg id="d3Graph"></svg>',
                 scope: {
                     data: '<',
-                    options: '<',
-                    api: '<?'
+                    options: '<'
                 },
                 link: function (scope, element, attrs) {
-
                     var width = 1000,
                         height = 700,
                         circleRadius = 10,
                         markerWidth = 5,
                         markerHeight = 8;
+
                     //scales
                     var colorScale = d3.scale.category20(),
                         xScale = d3.scale.linear().domain([0, width]).range([0, width]),
                         yScale = d3.scale.linear().domain([0, height]).range([0, height]);
+
                     //nodes and links
                     var nodes = scope.data.nodes,
                         links = scope.data.edges,
@@ -48,6 +48,9 @@
                     links.forEach(function (edge) {
                         adjacencyMatrix[[edge.source, +edge.target]] = true;
                     });
+
+                    // Options setting
+                    var filename = scope.options.filename || 'graph';
 
 
                     // Array of selected nodes
@@ -153,6 +156,32 @@
                             });
                     }
 
+                    function createContextMenu(svg) {
+                        var data = [
+                            {name: 'SVG', fn: function() { exportAsSVG(filename, svg); }},
+                            {name: 'PDF', fn: function() { exportAsPDF(filename, svg); }},
+                            {name: 'PNG', fn: function() { exportAsPNG(filename, svg); }}
+                        ];
+
+                        var contextMenu = d3.select('body')
+                            .append('div')
+                            .attr('id', 'context-menu')
+                            .style('position', 'absolute')
+                            .on('mouseleave', function() {
+                                d3.select(this).remove();
+                            });
+
+                        contextMenu.append('ul')
+                            .selectAll('li')
+                            .data(data)
+                            .enter()
+                            .append('li')
+                            .text(function(d) { return 'Export as ' + d.name;})
+                            .on('click', function(d) {d.fn();});
+
+                        return contextMenu;
+                    }
+
                     var node = svg.selectAll(".node"),
                         link = svg.selectAll(".link");
                     // Force step
@@ -203,20 +232,6 @@
                     // Start the force layout
                     force.start();
 
-                    var api = {
-                        exportAsPNG: function (filename) {
-                            exportAsPNG(filename, svg);
-                        },
-                        exportAsSVG: function (filename) {
-                            exportAsSVG(filename, svg);
-                        },
-                        exportAsPDF: function (filename) {
-                            exportAsPDF(filename, svg);
-                        }
-                    };
-
-                    if (angular.isFunction(scope.api)) scope.api(api);
-
                     /*
                      * Render functions
                      */
@@ -228,7 +243,7 @@
                             .style('border', '1px dashed black')
                             .call(zoom)
                             .on('mousedown', rectZoom)
-                            .on('contextmenu', exportArea);
+                            .on('contextmenu', contextMenu);
                     }
 
                     // Render container for graph
@@ -991,8 +1006,10 @@
                             .node().parentNode.innerHTML;
                     }
 
-                    // Export selected area
-                    function exportArea() {
+                    // Context menu
+                    // Right click drag to select area and export area as SVG/PDF/PNG
+                    // Just right click to export full svg
+                    function contextMenu() {
                         d3.event.preventDefault();
 
                         var e = this,
@@ -1003,7 +1020,7 @@
                         origin[1] = Math.max(0, Math.min(height, origin[1]));
 
                         d3.select(window)
-                            .on("mousemove.areaExport", function () {
+                            .on("mousemove.contextMenu", function () {
                                 var m = d3.mouse(e);
                                 m[0] = Math.max(0, Math.min(width, m[0]));
                                 m[1] = Math.max(0, Math.min(height, m[1]));
@@ -1012,12 +1029,13 @@
                                     .attr("width", Math.abs(m[0] - origin[0]))
                                     .attr("height", Math.abs(m[1] - origin[1]));
                             })
-                            .on("mouseup.areaExport", function () {
-                                d3.select(window).on("mousemove.areaExport", null).on("mouseup.areaExport", null);
+                            .on("mouseup.contextMenu", function () {
+                                d3.select(window).on("mousemove.contextMenu", null).on("mouseup.contextMenu", null);
                                 d3.select("body").classed("noselect", false);
                                 var m = d3.mouse(e);
                                 m[0] = Math.max(0, Math.min(width, m[0]));
                                 m[1] = Math.max(0, Math.min(height, m[1]));
+
                                 var viewBox = {
                                     x: Math.min(origin[0], m[0]),
                                     y: Math.min(origin[1], m[1]),
@@ -1025,18 +1043,38 @@
                                     height: Math.max(origin[1], m[1]) - Math.min(origin[1], m[1])
                                 };
 
-                                rect.remove();
-                                var copied = d3.select('body')
-                                    .append('div')
-                                    .append('svg')
-                                    .attr('id', 'copy')
-                                    .attr('width', width)
-                                    .attr('height', height)
-                                    .style('display', 'none')
-                                    .attr('viewBox', viewBox.x + ' ' + viewBox.y + ' ' + viewBox.width + ' ' + viewBox.height)
-                                    .html(svg.html());
-                                exportAsSVG('test', copied);
-                                copied.node().parentNode.remove();
+                                // Check for min size of viewBox
+                                if (viewBox.width > 50 && viewBox.height > 50) {
+                                    rect.remove();
+
+                                    // Create copy of svg and set viewBox to selected area
+                                    var copied = d3.select('body')
+                                        .append('div')
+                                        .append('svg')
+                                        .attr('id', 'copy')
+                                        .attr('width', width)
+                                        .attr('height', height)
+                                        .style('display', 'none')
+                                        .attr('viewBox', viewBox.x + ' ' + viewBox.y + ' ' + viewBox.width + ' ' + viewBox.height)
+                                        .html(svg.html());
+
+                                    // Create context menu and save svg in viewbox
+                                    createContextMenu(copied)
+                                        .style('left', (m[0] + 20) + 'px')
+                                        .style('top', m[1] + 'px')
+                                        .style('display', 'inline-block');
+
+                                    // Remove viewbox svg
+                                    copied.node().parentNode.remove();
+                                } else {
+                                    rect.remove();
+
+                                    // Create context menu und save whole svg
+                                    createContextMenu(svg)
+                                        .style('left', (m[0] + 20) + 'px')
+                                        .style('top', m[1] + 'px')
+                                        .style('display', 'inline-block');
+                                }
                             }, true);
                         d3.event.stopPropagation();
                     }
@@ -1045,7 +1083,7 @@
                     function getCanvasWithImage(svg, cb) {
                         var html = getSVGHtml(svg);
 
-                        d3.select('body').append('canvas')
+                        var appeneded = d3.select('body').append('canvas')
                             .attr('width', width)
                             .attr('height', height)
                             .style('display', 'none');
@@ -1058,6 +1096,7 @@
                         image.onload = function () {
                             context.drawImage(image, 0, 0);
                             cb(canvas);
+                            appeneded.remove();
                         };
                     }
 

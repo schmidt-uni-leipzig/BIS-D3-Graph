@@ -15,3 +15,17 @@ rect.select {
   stroke: steelblue;
   fill-opacity: 0.5;
 }
+
+#context-menu {
+  border: 1px dashed red;
+}
+
+#context-menu ul {
+  margin: 0;
+  padding: 5px 10px;
+  list-style-type: none;
+}
+
+#context-menu ul li:hover {
+  background-color: grey;
+}

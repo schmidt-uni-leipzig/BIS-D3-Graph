@@ -7,12 +7,8 @@
     <link rel="stylesheet" href="../src/d3.css">
 </head>
 <body ng-controller="BasicCtrl">
-    <d3-graph data="data" api="api"></d3-graph>
+    <d3-graph data="data" options="options"></d3-graph>
     <div>
-        <button ng-click="savePNG()">Save as PNG</button>
-        <button ng-click="saveSVG()">Save as SVG</button>
-        <button ng-click="savePDF()">Save as PDF</button>
-
         <p>
         <strong>Graph commands</strong>
     <ul>
@@ -138,19 +134,7 @@
                 ]
             };
 
-
-
-            $scope.api = function(api) {
-                $scope.savePNG = function() {
-                    api.exportAsPNG('test');
-                };
-                $scope.saveSVG = function() {
-                    api.exportAsSVG('test');
-                };
-                $scope.savePDF = function() {
-                    api.exportAsPDF('test');
-                }
-            }
+            $scope.options = {};
         });
     </script>
 </body>
