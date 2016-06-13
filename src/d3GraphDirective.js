@@ -52,7 +52,9 @@
                     // Options setting
                     var options = {};
                     options.filename = scope.options.filename || 'graph';
-                    options.nodeClickCb = scope.options.nodeClickCb || function() {};
+                    options.grouping = scope.options.grouping || false;
+                    options.nodeClickCb = scope.options.nodeClickCb || function () {
+                        };
 
 
                     // Array of selected nodes
@@ -123,7 +125,8 @@
                     hullg = container.append('g');
                     var linksContainer = renderLinks(container);
                     var nodesContainer = renderNodes(container);
-                    initHull();
+                    if (scope.options.grouping)
+                        initHull();
 
                     //init hull
                     function removeHull() {
@@ -158,16 +161,28 @@
 
                     function createContextMenu(svg) {
                         var data = [
-                            {name: 'SVG', fn: function() { exportAsSVG(options.filename, svg); }},
-                            {name: 'PDF', fn: function() { exportAsPDF(options.filename, svg); }},
-                            {name: 'PNG', fn: function() { exportAsPNG(options.filename, svg); }}
+                            {
+                                name: 'SVG', fn: function () {
+                                exportAsSVG(options.filename, svg);
+                            }
+                            },
+                            {
+                                name: 'PDF', fn: function () {
+                                exportAsPDF(options.filename, svg);
+                            }
+                            },
+                            {
+                                name: 'PNG', fn: function () {
+                                exportAsPNG(options.filename, svg);
+                            }
+                            }
                         ];
 
                         var contextMenu = d3.select('body')
                             .append('div')
                             .attr('id', 'context-menu')
                             .style('position', 'absolute')
-                            .on('mouseleave', function() {
+                            .on('mouseleave', function () {
                                 d3.select(this).remove();
                             });
 
@@ -176,8 +191,12 @@
                             .data(data)
                             .enter()
                             .append('li')
-                            .text(function(d) { return 'Export as ' + d.name;})
-                            .on('click', function(d) {d.fn();});
+                            .text(function (d) {
+                                return 'Export as ' + d.name;
+                            })
+                            .on('click', function (d) {
+                                d.fn();
+                            });
 
                         return contextMenu;
                     }
@@ -186,8 +205,9 @@
                         link = svg.selectAll(".link");
                     // Force step
                     force.on('tick', function () {
-                        hull.data(convexHulls(nodes, 0, 13))
-                            .attr("d", drawCluster);
+                        if (scope.options.grouping)
+                            hull.data(convexHulls(nodes, 0, 13))
+                                .attr("d", drawCluster);
                         nodesContainer
                             .attr('transform', function (d) {
                                 return 'translate(' + d.x + ',' + d.y + ')';
@@ -389,59 +409,61 @@
                         }
 
                         if (d3.event.keyCode === 71) { //g key
-                            // -1 because last one is group undefined
-                            if (!grouped) {
-                                originalLinks = angular.copy(links);
-                                for (var i = 0; i < d3.keys(groups).length - 1; i++) {
-                                    var grpName = "";
-                                    for (var u = 0; u < groups[d3.keys(groups)[i]].length; u++) {
-                                        grpName += groups[d3.keys(groups)[i]][u].name + ": ";
+                            if (scope.options.grouping) {
+                                // -1 because last one is group undefined
+                                if (!grouped) {
+                                    originalLinks = angular.copy(links);
+                                    for (var i = 0; i < d3.keys(groups).length - 1; i++) {
+                                        var grpName = "";
+                                        for (var u = 0; u < groups[d3.keys(groups)[i]].length; u++) {
+                                            grpName += groups[d3.keys(groups)[i]][u].name + ": ";
+                                        }
+                                        removeHull();
+                                        grpName = grpName.slice(0, grpName.length - 2);
+
+                                        groupHullNodes({
+                                            id: 100 + d3.keys(groups)[i],
+                                            name: "Gruppe" + d3.keys(groups)[i] + ": " + grpName,
+                                            size: 2,
+                                            color: gc[d3.keys(groups)[i]],
+                                            tag: "group"
+                                        }, d3.keys(groups)[i]);
                                     }
-                                    removeHull();
-                                    grpName = grpName.slice(0, grpName.length - 2);
+                                } else {
+                                    var deleteNodes = [];
+                                    var addNodes = [];
+                                    var addLinks = [];
 
-                                    groupHullNodes({
-                                        id: 100 + d3.keys(groups)[i],
-                                        name: "Gruppe" + d3.keys(groups)[i] + ": " + grpName,
-                                        size: 2,
-                                        color: gc[d3.keys(groups)[i]],
-                                        tag: "group"
-                                    }, d3.keys(groups)[i]);
-                                }
-                            } else {
-                                var deleteNodes = [];
-                                var addNodes = [];
-                                var addLinks = [];
-
-                                for ( i = 0; i < nodes.length; i += 1) {
-                                    if (nodes[i].tag === "group") {
-                                        deleteNodes.push(i);
-                                        removeAttachedLinksByIndex(nodes[i].id);
-                                        addNodes.push(nodes[i].group);
+                                    for (i = 0; i < nodes.length; i += 1) {
+                                        if (nodes[i].tag === "group") {
+                                            deleteNodes.push(i);
+                                            removeAttachedLinksByIndex(nodes[i].id);
+                                            addNodes.push(nodes[i].group);
+                                        }
                                     }
-                                }
-                                deleteNodes.reverse().forEach(function (i) {
-                                    nodes.splice(i, 1);
-                                });
-                                addNodes.forEach(function (n) {
-                                    nodes = nodes.concat(n);
-                                });
-                                var nodesMap = d3.map(nodes, function (d) {
-                                    return d.id;
-                                });
-                                originalLinks.forEach(function (l) {
-                                    var srcNode = nodesMap.get(l.source.id);
-                                    var trgNode = nodesMap.get(l.target.id);
-                                    var newLink = l;
-                                    newLink = {source: srcNode, target: trgNode, text: l.text};
-                                    links.push(newLink);
-                                });
-                                initHull();
+                                    deleteNodes.reverse().forEach(function (i) {
+                                        nodes.splice(i, 1);
+                                    });
+                                    addNodes.forEach(function (n) {
+                                        nodes = nodes.concat(n);
+                                    });
+                                    var nodesMap = d3.map(nodes, function (d) {
+                                        return d.id;
+                                    });
+                                    originalLinks.forEach(function (l) {
+                                        var srcNode = nodesMap.get(l.source.id);
+                                        var trgNode = nodesMap.get(l.target.id);
+                                        var newLink = l;
+                                        newLink = {source: srcNode, target: trgNode, text: l.text};
+                                        links.push(newLink);
+                                    });
+                                    initHull();
 
+                                }
+                                updateAdjacencyMatrix();
+                                updateForceLayout();
+                                toggleGrouped();
                             }
-                            updateAdjacencyMatrix();
-                            updateForceLayout();
-                            toggleGrouped();
                         }
                     }
 
@@ -943,15 +965,7 @@
 
                     // Get the BLOB of the SVG. Used for API functions.
                     function getSVGBlob(svg) {
-                        return new Blob([getSVGHtml(svg)], {type: 'image/svg+xml'});
-                    }
-
-                    // Get the html of the svg. Used for API functions.
-                    function getSVGHtml(svg) {
-                        return svg
-                            .attr('version', 1.1)
-                            .attr('xmlns', 'http://www.w3.org/2000/svg')
-                            .node().parentNode.innerHTML;
+                        return new Blob([new XMLSerializer().serializeToString(svg.node())], {type: 'image/svg+xml'});
                     }
 
                     // Context menu
@@ -1002,7 +1016,6 @@
                                         .attr('id', 'copy')
                                         .attr('width', width)
                                         .attr('height', height)
-                                        .style('display', 'none')
                                         .attr('viewBox', viewBox.x + ' ' + viewBox.y + ' ' + viewBox.width + ' ' + viewBox.height)
                                         .html(svg.html());
 
@@ -1029,8 +1042,6 @@
 
                     // Generates a canvas with an image from the svg
                     function getCanvasWithImage(svg, cb) {
-                        var html = getSVGHtml(svg);
-
                         var appeneded = d3.select('body').append('canvas')
                             .attr('width', width)
                             .attr('height', height)
@@ -1038,7 +1049,8 @@
                         var canvas = document.querySelector("canvas"),
                             context = canvas.getContext("2d");
 
-                        var imgsrc = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(html))); //TODO alternative for unescape
+                        var xml = new XMLSerializer().serializeToString(svg.node());
+                        var imgsrc = 'data:image/svg+xml;,' + encodeURIComponent( xml );
                         var image = new Image();
                         image.src = imgsrc;
                         image.onload = function () {
