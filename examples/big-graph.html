@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="basic">
+<head>
+    <meta charset="UTF-8">
+    <title>Big graph example</title>
+    <link rel="stylesheet" href="../bower_components/font-awesome/css/font-awesome.min.css">
+    <link rel="stylesheet" href="../src/d3.css">
+</head>
+<body ng-controller="BasicCtrl">
+<d3-graph data="data" options="options"></d3-graph>
+<div>
+    <p>
+        <strong>Graph commands</strong>
+    <ul>
+        <li>Press c-Key to focus the graph</li>
+        <li>Press g-Key to shrink/expand group</li>
+        <li>Hover node to show neighbours</li>
+        <li>Click node to select node. If two nodes are selected, all paths between these two nodes are shown.</li>
+        <li>Right click to open context menu and export graph as SVG/PNG/PDF</li>
+        <li>Right click + drag to open context menu and export selected area as SVG/PNG/PDF</li>
+    </ul>
+    </p>
+</div>
+<script src="../bower_components/FileSaver/FileSaver.min.js"></script>
+<script src="../bower_components/jspdf/dist/jspdf.min.js"></script>
+<script src="../bower_components/d3/d3.js"></script>
+<script src="../bower_components/angular/angular.js"></script>
+<script src="../src/d3GraphDirective.js"></script>
+<script>
+    var app = angular.module('basic', ['d3graph']);
+
+    app.controller('BasicCtrl', function($scope) {
+        $scope.data = {
+            nodes: [{"id":0,"name":"Vérane"},
+                    {"id":1,"name":"Bécassine"},
+                    {"id":2,"name":"Lucrèce"},
+                    {"id":3,"name":"Magdalène"},
+                    {"id":4,"name":"Loïc"},
+                    {"id":5,"name":"Yénora"},
+                    {"id":6,"name":"Garçon"},
+                    {"id":7,"name":"Desirée"},
+                    {"id":8,"name":"Thérèse"},
+                    {"id":9,"name":"Irène"},
+                    {"id":10,"name":"Eléonore"},
+                    {"id":11,"name":"Lauréna"},
+                    {"id":12,"name":"Aí"},
+                    {"id":13,"name":"Cléa"},
+                    {"id":14,"name":"Salomé"},
+                    {"id":15,"name":"Mà"},
+                    {"id":16,"name":"Mà"},
+                    {"id":17,"name":"Danièle"},
+                    {"id":18,"name":"Pénélope"},
+                    {"id":19,"name":"Adélie"},
+                    {"id":20,"name":"Hélène"},
+                    {"id":21,"name":"Mélina"},
+                    {"id":22,"name":"Daphnée"},
+                    {"id":23,"name":"Thérèsa"},
+                    {"id":24,"name":"Nuó"},
+                    {"id":25,"name":"Inès"},
+                    {"id":26,"name":"Mégane"},
+                    {"id":27,"name":"Gisèle"},
+                    {"id":28,"name":"Françoise"},
+                    {"id":29,"name":"Cécile"},
+                    {"id":30,"name":"Clémence"},
+                    {"id":31,"name":"Agnès"},
+                    {"id":32,"name":"Mà"},
+                    {"id":33,"name":"Maëline"},
+                    {"id":34,"name":"Vénus"},
+                    {"id":35,"name":"Gaïa"},
+                    {"id":36,"name":"Rachèle"},
+                    {"id":37,"name":"Ophélie"},
+                    {"id":38,"name":"Marie-hélène"},
+                    {"id":39,"name":"Mén"},
+                    {"id":40,"name":"Salomé"},
+                    {"id":41,"name":"Åslög"},
+                    {"id":42,"name":"Laurélie"},
+                    {"id":43,"name":"Mélodie"},
+                    {"id":44,"name":"Méghane"},
+                    {"id":45,"name":"Mélys"},
+                    {"id":46,"name":"Edmée"},
+                    {"id":47,"name":"Maïlis"},
+                    {"id":48,"name":"Hélèna"},
+                    {"id":49,"name":"Maïlys"}],
+            edges: [{"source":48,"target":21},
+                {"source":37,"target":44},
+                {"source":47,"target":19},
+                {"source":42,"target":34,"name":"Hepu"},
+                {"source":20,"target":6,"name":"Olympia"},
+                {"source":24,"target":10},
+                {"source":41,"target":38,"name":"Jurm"},
+                {"source":15,"target":32,"name":"Léfka"},
+                {"source":33,"target":25,"name":"Staryy Togul"},
+                {"source":37,"target":31,"name":"Gogaran"},
+                {"source":11,"target":11},
+                {"source":9,"target":43},
+                {"source":23,"target":37,"name":"Chame"},
+                {"source":46,"target":7},
+                {"source":33,"target":1,"name":"Shujāābād"},
+                {"source":20,"target":18},
+                {"source":39,"target":40},
+                {"source":2,"target":1},
+                {"source":37,"target":23,"name":"Dourados"},
+                {"source":39,"target":32},
+                {"source":15,"target":9,"name":"Tampa"},
+                {"source":8,"target":23,"name":"Sukakarya"},
+                {"source":31,"target":43,"name":"Benito Juarez"},
+                {"source":49,"target":20,"name":"Nāḩiyat Hīrān"},
+                {"source":34,"target":41,"name":"Laspezia"},
+                {"source":29,"target":1,"name":"Staraya Toropa"},
+                {"source":21,"target":2,"name":"Balesari"},
+                {"source":29,"target":31,"name":"Vellinge"},
+                {"source":30,"target":48,"name":"Kulase"},
+                {"source":0,"target":30},
+                {"source":19,"target":38,"name":"Jiujiang"},
+                {"source":18,"target":46},
+                {"source":5,"target":45,"name":"Gutang"},
+                {"source":44,"target":41,"name":"Eirado"},
+                {"source":0,"target":3,"name":"Zhendu"},
+                {"source":12,"target":26},
+                {"source":25,"target":6},
+                {"source":23,"target":38,"name":"Puerto Santander"},
+                {"source":10,"target":31,"name":"Vilkija"},
+                {"source":6,"target":30,"name":"Fojo"},
+                {"source":8,"target":14,"name":"Hefu"},
+                {"source":49,"target":48,"name":"Kranjska Gora"},
+                {"source":36,"target":5},
+                {"source":26,"target":28,"name":"Morada Nova"},
+                {"source":48,"target":10,"name":"Xiashuitou"},
+                {"source":12,"target":46,"name":"Chernyshkovskiy"},
+                {"source":35,"target":49},
+                {"source":40,"target":12},
+                {"source":43,"target":41,"name":"Genting"},
+                {"source":48,"target":16,"name":"Hidalgo"},
+                {"source":26,"target":47,"name":"Pondohan"},
+                {"source":8,"target":10},
+                {"source":33,"target":35,"name":"Mayo"},
+                {"source":37,"target":13},
+                {"source":35,"target":41,"name":"Ludvika"},
+                {"source":35,"target":41,"name":"Plaza Huincul"},
+                {"source":35,"target":36,"name":"Libas"},
+                {"source":30,"target":11},
+                {"source":8,"target":31,"name":"Sremčica"},
+                {"source":26,"target":40,"name":"Morocelí"},
+                {"source":13,"target":13},
+                {"source":20,"target":46,"name":"Voiron"},
+                {"source":3,"target":13,"name":"Baofeng"},
+                {"source":27,"target":13},
+                {"source":8,"target":48,"name":"Zhaodong"},
+                {"source":29,"target":10},
+                {"source":14,"target":43},
+                {"source":35,"target":13,"name":"Silute"},
+                {"source":28,"target":14,"name":"Guápiles"},
+                {"source":10,"target":29,"name":"Leiyang"},
+                {"source":19,"target":40},
+                {"source":9,"target":28,"name":"Ribnica na Pohorju"},
+                {"source":23,"target":46},
+                {"source":13,"target":16},
+                {"source":6,"target":29,"name":"Weyburn"},
+                {"source":7,"target":48},
+                {"source":45,"target":15,"name":"Ferreiros"},
+                {"source":42,"target":5},
+                {"source":16,"target":16},
+                {"source":37,"target":7,"name":"Hashtpar"},
+                {"source":32,"target":17},
+                {"source":11,"target":40,"name":"Bagalangit"},
+                {"source":14,"target":4,"name":"Jiahe"},
+                {"source":23,"target":19},
+                {"source":37,"target":33},
+                {"source":33,"target":24,"name":"Raszczyce"},
+                {"source":21,"target":9,"name":"Orange Farm"},
+                {"source":4,"target":3,"name":"La Mesa"},
+                {"source":0,"target":33,"name":"La Plata"},
+                {"source":12,"target":36},
+                {"source":28,"target":0},
+                {"source":9,"target":7,"name":"Obispos"},
+                {"source":3,"target":37},
+                {"source":24,"target":0},
+                {"source":16,"target":7,"name":"Punta de Piedra"},
+                {"source":36,"target":41},
+                {"source":46,"target":11,"name":"Nueva Guadalupe"},
+                {"source":35,"target":39,"name":"Ikata-chō"},
+                {"source":20,"target":19},
+                {"source":39,"target":15,"name":"Bridel"}]
+        };
+
+        $scope.options = {};
+    });
+</script>
+</body>
+</html>
