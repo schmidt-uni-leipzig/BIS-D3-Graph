@@ -71,6 +71,9 @@
                     // Array of selected nodes
                     var selectedNodes = [];
 
+                    // Boolean to toggle rectangle zoom
+                    var isRectZoom = false;
+
                     /*
                      Utility Section
                      Define force layout, drag, zoom
@@ -273,7 +276,8 @@
                             .attr('height', height)
                             .style('border', '1px dashed black')
                             .call(zoom)
-                            .on('contextmenu', contextMenu);
+                            .on('contextmenu', contextMenu)
+                            .on('mousedown', rectZoom);
                     }
 
                     // Render container for graph
@@ -419,6 +423,11 @@
                             return;
                         }
 
+                        if (d3.event.keyCode === 82) {
+                            isRectZoom = !isRectZoom;
+                            return;
+                        }
+
                         if (d3.event.keyCode === 71) { //g key
                             if (scope.options.grouping) {
                                 // -1 because last one is group undefined
@@ -493,6 +502,7 @@
                     }
 
                     function zoomed() {
+                        if (isRectZoom) return;
                         if (d3.event.sourceEvent && d3.event.sourceEvent.button !== 0) return; // no left click
                         container.attr('transform', 'translate(' + d3.event.translate + ')scale(' + d3.event.scale + ')');
                     }
@@ -502,6 +512,82 @@
                             zoom.translate(old.translation);
                             zoom.scale(old.scale);
                         }
+                    }
+
+                    // Zoom the graph by selecting an area
+                    //TODO
+                    function rectZoom() {
+                        /*jshint validthis: true */
+                        if (!isRectZoom) return;
+                        var oldTranslate = zoom.translate();
+                        
+                        var e = this,
+                            origin = d3.mouse(e),
+                            rect = svg.append('rect').attr('class', 'zoom');
+
+                        // Green point in center of selection area
+                        var rectCenter = svg.append('circle')
+                            .attr('r', 3)
+                            .style('fill', 'green');
+                        var centerRectangle;
+
+                        origin[0] = Math.max(0, Math.min(options.width, origin[0]));
+                        origin[1] = Math.max(0, Math.min(options.height, origin[1]));
+
+                        d3.select(window)
+                            .on("mousemove.zoomRect", function () {
+                                var mouse = d3.mouse(e); // mouse event position
+                                mouse[0] = Math.max(0, Math.min(options.width, mouse[0])); // Limit rectangle to max width or 0
+                                mouse[1] = Math.max(0, Math.min(options.height, mouse[1])); // Limit rectangle to max height or 0
+                                // Render area of selection
+                                rect.attr("x", Math.min(origin[0], mouse[0]))
+                                    .attr("y", Math.min(origin[1], mouse[1]))
+                                    .attr("width", Math.abs(mouse[0] - origin[0]))
+                                    .attr("height", Math.abs(mouse[1] - origin[1]));
+
+                                // Center of selection area
+                                centerRectangle = [
+                                    (origin[0] + mouse[0]) / 2,
+                                    (origin[1] + mouse[1]) / 2
+                                ];
+                                rectCenter.attr('cx', centerRectangle[0])
+                                    .attr('cy', centerRectangle[1]);
+                            })
+                            .on("mouseup.zoomRect", function () {
+                                var center = [options.width / 2, options.height / 2];
+                                isRectZoom = false;
+                                d3.select(window).on("mousemove.zoomRect", null).on("mouseup.zoomRect", null);
+                                d3.select("body").classed("noselect", false);
+                                var mouse = d3.mouse(e);
+                                mouse[0] = Math.max(0, Math.min(options.width, mouse[0]));
+                                mouse[1] = Math.max(0, Math.min(options.height, mouse[1]));
+
+                                if (mouse[0] !== origin[0] && mouse[1] !== origin[1]) {
+                                    var bbox = container.node().getBBox();
+                                    var cx = bbox.x + (bbox.width/2); // x is the offset of the element horizontally
+                                    var cy = bbox.y + (bbox.height/2);  // y is the offset of the element vertically
+
+                                    var scale = 2;
+                                    // Calculate translate
+                                    var oldTranslate = d3.transform(container.attr('transform')).translate;
+                                    var translate = [center[0] - centerRectangle[0], center[1] - centerRectangle[1]]; // calculate translate from rectangle center to svg center
+                                    //translate[0] += (options.width - scale * options.width) / 2; // does not work
+                                    //translate[1] += (options.height - scale * options.height) /2; // does not work
+                                    translate[0] += oldTranslate[0]; // Add old translation
+                                    translate[1] += oldTranslate[1]; // Add old translation
+
+                                    // Translates svg to center selected area
+                                    zoom.translate(translate); // centering selected area works
+
+                                    // Set scale of svg
+                                    // zoom.scale(scale); scale does not work
+                                }
+                                rect.remove();
+                                rectCenter.remove();
+
+                                zoom.event(svg);
+                            }, true);
+                        d3.event.stopPropagation();
                     }
 
                     // Drag started

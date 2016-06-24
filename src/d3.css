@@ -16,6 +16,11 @@ rect.select {
   fill-opacity: 0.5;
 }
 
+rect.zoom {
+  stroke: steelblue;
+  fill-opacity: 0.5;
+}
+
 #context-menu {
   border: 1px dashed red;
 }
