@@ -14,16 +14,35 @@
                     options: '<'
                 },
                 link: function (scope, element, attrs) {
-                    var width = 1000,
-                        height = 700,
-                        circleRadius = 10,
-                        markerWidth = 5,
-                        markerHeight = 8;
+                    // Options setting
+                    var options = {};
+                    options.filename = scope.options.filename || 'graph';
+                    options.grouping = scope.options.grouping || false;
+                    options.nodeClickCb = scope.options.nodeClickCb || function () {};
+                    options.circleRadius = scope.options.circleRadius || 10;
+                    options.marker = {
+                        width: angular.isDefined(scope.options.marker) ? scope.options.marker.width || 5 : 5,
+                        height: angular.isDefined(scope.options.marker) ? scope.options.marker.height || 8 : 8
+                    };
+
+                    // Check width and height. Throw error if one is non existent.
+                    if (!scope.options.width || !scope.options.height) {
+                        throw new Error('options: Width and height has to be specified.');
+                    }
+
+                    // Check width and height to be a number. Throw error if one is not a number.
+                    if (!angular.isNumber(scope.options.width) || !angular.isNumber(scope.options.width)) {
+                        throw new Error('options: Width and height has to be a number.');
+                    }
+
+                    // Set width and height
+                    options.width = scope.options.width;
+                    options.height = scope.options.height;
 
                     //scales
                     var colorScale = d3.scale.category20(),
-                        xScale = d3.scale.linear().domain([0, width]).range([0, width]),
-                        yScale = d3.scale.linear().domain([0, height]).range([0, height]);
+                        xScale = d3.scale.linear().domain([0, options.width]).range([0, options.width]),
+                        yScale = d3.scale.linear().domain([0, options.height]).range([0, options.height]);
 
                     //nodes and links
                     var nodes = scope.data.nodes,
@@ -49,14 +68,6 @@
                         adjacencyMatrix[[edge.source, +edge.target]] = true;
                     });
 
-                    // Options setting
-                    var options = {};
-                    options.filename = scope.options.filename || 'graph';
-                    options.grouping = scope.options.grouping || false;
-                    options.nodeClickCb = scope.options.nodeClickCb || function () {
-                        };
-
-
                     // Array of selected nodes
                     var selectedNodes = [];
 
@@ -72,7 +83,7 @@
                     }
                     // Force layout
                     var force = d3.layout.force()
-                        .size([width, height])
+                        .size([options.width, options.height])
                         .nodes(nodes)
                         .links(links);
 
@@ -120,11 +131,11 @@
                         .on('keyup.brush', keyUp);
 
                     // Style svg
-                    var svg = renderSVG(width, height, zoom);
+                    var svg = renderSVG(options.width, options.height, zoom);
                     var container = renderGraphContainer(svg);
                     hullg = container.append('g');
                     var linksContainer = renderLinks(container);
-                    var nodesContainer = renderNodes(container);
+                    var nodesContainer = renderNodes(container, options.circleRadius);
                     if (scope.options.grouping)
                         initHull();
 
@@ -248,7 +259,7 @@
                      * Start block
                      */
                     // Init markers for link ends
-                    initMarkers(svg, circleRadius, markerWidth, markerHeight);
+                    initMarkers(svg, options.circleRadius, options.marker.width, options.marker.height);
                     // Start the force layout
                     force.start();
 
@@ -271,7 +282,7 @@
                     }
 
                     // Render the nodes
-                    function renderNodes(container) {
+                    function renderNodes(container, circleRadius) {
                         // Nodes container
                         var nodesContainer = container
                             .append('g')
@@ -708,9 +719,9 @@
                             .attr('class', 'node background')
                             .attr('r', function (d) {
                                 if (d.size)
-                                    return d.size * circleRadius;
+                                    return d.size * options.circleRadius;
                                 else
-                                    return circleRadius;
+                                    return options.circleRadius;
                             })
                             .style('fill', function (d) {
                                 return d.color || '#fff'; // default background color white
@@ -730,9 +741,9 @@
                             .attr('class', 'node foreground')
                             .attr('r', function (d) {
                                 if (d.size)
-                                    return d.size * circleRadius;
+                                    return d.size * options.circleRadius;
                                 else
-                                    return circleRadius;
+                                    return options.circleRadius;
                             })
                             .style({
                                 'fill': 'transparent',
@@ -949,8 +960,8 @@
                         var newMolHeight = molHeight * minRatio;
 
                         // translate so that it's in the center of the window
-                        var xTrans = -(minX) * minRatio + (width - newMolWidth) / 2;
-                        var yTrans = -(minY) * minRatio + (height - newMolHeight) / 2;
+                        var xTrans = -(minX) * minRatio + (options.width - newMolWidth) / 2;
+                        var yTrans = -(minY) * minRatio + (options.height - newMolHeight) / 2;
 
 
                         // do the actual moving
@@ -978,14 +989,14 @@
                             origin = d3.mouse(e),
                             rect = svg.append('rect').attr('class', 'select');
 
-                        origin[0] = Math.max(0, Math.min(width, origin[0]));
-                        origin[1] = Math.max(0, Math.min(height, origin[1]));
+                        origin[0] = Math.max(0, Math.min(options.width, origin[0]));
+                        origin[1] = Math.max(0, Math.min(options.height, origin[1]));
 
                         d3.select(window)
                             .on("mousemove.contextMenu", function () {
                                 var m = d3.mouse(e);
-                                m[0] = Math.max(0, Math.min(width, m[0]));
-                                m[1] = Math.max(0, Math.min(height, m[1]));
+                                m[0] = Math.max(0, Math.min(options.width, m[0]));
+                                m[1] = Math.max(0, Math.min(options.height, m[1]));
                                 rect.attr("x", Math.min(origin[0], m[0]))
                                     .attr("y", Math.min(origin[1], m[1]))
                                     .attr("width", Math.abs(m[0] - origin[0]))
@@ -995,8 +1006,8 @@
                                 d3.select(window).on("mousemove.contextMenu", null).on("mouseup.contextMenu", null);
                                 d3.select("body").classed("noselect", false);
                                 var m = d3.mouse(e);
-                                m[0] = Math.max(0, Math.min(width, m[0]));
-                                m[1] = Math.max(0, Math.min(height, m[1]));
+                                m[0] = Math.max(0, Math.min(options.width, m[0]));
+                                m[1] = Math.max(0, Math.min(options.height, m[1]));
 
                                 var viewBox = {
                                     x: Math.min(origin[0], m[0]),
@@ -1014,8 +1025,8 @@
                                         .append('div')
                                         .append('svg')
                                         .attr('id', 'copy')
-                                        .attr('width', width)
-                                        .attr('height', height)
+                                        .attr('width', options.width)
+                                        .attr('height', options.height)
                                         .attr('viewBox', viewBox.x + ' ' + viewBox.y + ' ' + viewBox.width + ' ' + viewBox.height)
                                         .html(svg.html());
 
@@ -1043,8 +1054,8 @@
                     // Generates a canvas with an image from the svg
                     function getCanvasWithImage(svg, cb) {
                         var appeneded = d3.select('body').append('canvas')
-                            .attr('width', width)
-                            .attr('height', height)
+                            .attr('width', options.width)
+                            .attr('height', options.height)
                             .style('display', 'none');
                         var canvas = document.querySelector("canvas"),
                             context = canvas.getContext("2d");
