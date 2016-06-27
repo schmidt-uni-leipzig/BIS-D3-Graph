@@ -21,6 +21,7 @@
     </ul>
     </p>
 </div>
+<script src="../bower_components/canvas-to-blob/js/canvas-to-blob.js"></script>
 <script src="../bower_components/FileSaver/FileSaver.min.js"></script>
 <script src="../bower_components/jspdf/dist/jspdf.min.js"></script>
 <script src="../bower_components/d3/d3.js"></script>
@@ -183,7 +184,10 @@
                 {"source":39,"target":15,"name":"Bridel"}]
         };
 
-        $scope.options = {};
+        $scope.options = {
+            width: 1000,
+            height: 700
+        };
     });
 </script>
 </body>
