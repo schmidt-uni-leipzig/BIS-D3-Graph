@@ -139,11 +139,11 @@
                     if (scope.options.grouping)
                         initHull();
 
-                    //init hull
+                    //removes the hull
                     function removeHull() {
                         hullg.selectAll("path.hull").remove();
                     }
-
+                    //initialiize hull
                     function initHull() {
                         hull = hullg.selectAll("path.hull")
                             .data(convexHulls(nodes, 0, 15))
@@ -420,6 +420,7 @@
                         }
 
                         if (d3.event.keyCode === 71) { //g key
+                            //toggles between nodes and groupes view
                             if (scope.options.grouping) {
                                 // -1 because last one is group undefined
                                 if (!grouped) {
@@ -818,16 +819,6 @@
                             links.splice(i, 1);
                         });
 
-                    }
-
-                    function removeAttachedLinksByName(name) {
-                        var newLinks = links;
-                        for (var l = 0; l < links.length; l++) {
-                            if (name === links[l].source.name || name === links[l].target.name) {
-                                newLinks.splice(l, 1);
-                            }
-                        }
-                        links = newLinks;
                     }
 
                     function removeNodeByName(n) {
