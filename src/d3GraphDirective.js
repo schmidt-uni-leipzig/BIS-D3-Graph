@@ -5,7 +5,7 @@
 
     /*global angular, d3, jsPDF */
     angular.module('d3graph', [])
-        .directive('d3Graph', function ($rootScope, $log) {
+        .directive('d3Graph', function ($rootScope) {
             return {
                 restrict: 'E',
                 template: '<svg id="d3Graph"></svg>',
@@ -55,7 +55,7 @@
                     var curve = d3.svg.line()
                         .interpolate("cardinal-closed")
                         .tension(0.85);
-                    var i = 0;
+
                     // Create object with every neighbour
                     var adjacencyMatrix = {};
                     var _nodeNeighbours = [];
@@ -78,9 +78,10 @@
                     var expandedGroups = {};
                     var groups = groupNodes(nodes);
 
-                    for (i = 0; i < d3.keys(groups).length - 1; i += 1) {
-                        convexHulls(groups[d3.keys(groups)[i]], d3.keys(groups)[i], 16);
-                    }
+                    angular.forEach(groups, function(value, key) {
+                        convexHulls(value, key, 16);
+                    });
+
                     // Force layout
                     var force = d3.layout.force()
                         .size([options.width, options.height])
@@ -127,8 +128,7 @@
 
                     // Add event control
                     d3.select('body')
-                        .on('keydown.brush', keyDown)
-                        .on('keyup.brush', keyUp);
+                        .on('keydown.brush', keyDown);
 
                     // Style svg
                     var svg = renderSVG(options.width, options.height, zoom);
@@ -170,6 +170,8 @@
                             });
                     }
 
+                    // Create context menu on right click
+                    // Applies export functions for graph
                     function createContextMenu(svg) {
                         var data = [
                             {
@@ -214,6 +216,7 @@
 
                     var node = svg.selectAll(".node"),
                         link = svg.selectAll(".link");
+
                     // Force step
                     force.on('tick', function () {
                         if (scope.options.grouping)
@@ -423,9 +426,10 @@
                             //toggles between nodes and groupes view
                             if (scope.options.grouping) {
                                 // -1 because last one is group undefined
+                                var i;
                                 if (!grouped) {
                                     originalLinks = angular.copy(links);
-                                    for (var i = 0; i < d3.keys(groups).length - 1; i++) {
+                                    for (i = 0; i < d3.keys(groups).length - 1; i++) {
                                         var grpName = "";
                                         for (var u = 0; u < groups[d3.keys(groups)[i]].length; u++) {
                                             grpName += groups[d3.keys(groups)[i]][u].name + ": ";
@@ -477,12 +481,6 @@
                                 toggleGrouped();
                             }
                         }
-                    }
-
-                    // KeyUp
-                    // Mostly reseting states
-                    function keyUp() {
-
                     }
 
                     // Zoom
@@ -599,7 +597,6 @@
                     // Export the graph as a PNG
                     function exportAsPNG(fileName, svg) {
                         getCanvasWithImage(svg, function (canvas) {
-                            console.log(canvas);
                             canvas.toBlob(function (blob) {
                                 saveAs(blob, fileName + '.png');
                             });
@@ -792,8 +789,8 @@
 
                         // create convex hulls
                         var hullset = [];
-                        for (i in hulls) {
-                            hullset.push({group: i, path: d3.geom.hull(hulls[i])});
+                        for (var hull in hulls) {
+                            hullset.push({group: hull, path: d3.geom.hull(hulls[hull])});
                         }
                         return hullset;
                     }
@@ -900,7 +897,8 @@
                                 y = text.attr("y"),
                                 dy = parseFloat(text.attr("dy")),
                                 tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
-                            while (word = words.pop()) {
+                            word = words.pop();
+                            while (word) {
                                 line.push(word);
                                 tspan.text(line.join(" "));
                                 if (tspan.node().getComputedTextLength() > width) {
@@ -909,6 +907,8 @@
                                     line = [word];
                                     tspan = text.append("tspan").attr("x", 25).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
                                 }
+
+                                word = words.pop();
                             }
                         });
                     }
@@ -940,8 +940,8 @@
                         var molHeight = maxY - minY;
 
                         // how much larger the drawing area is than the width and the height
-                        var widthRatio = width / molWidth;
-                        var heightRatio = height / molHeight;
+                        var widthRatio = options.width / molWidth;
+                        var heightRatio = options.height / molHeight;
 
                         // we need to fit it in both directions, so we scale according to
                         // the direction in which we need to shrink the most
@@ -975,6 +975,7 @@
                     // Right click drag to select area and export area as SVG/PDF/PNG
                     // Just right click to export full svg
                     function contextMenu() {
+                        /*jshint validthis: true */
                         d3.event.preventDefault();
 
                         var e = this,
@@ -1117,6 +1118,7 @@
 
                     // Traverse the graph and get all paths from start node
                     function traverse(start, paths) {
+                        /* jshint loopfunc:true */
                         var visited = [];
                         var queue = [];
                         var next = [start];
@@ -1128,7 +1130,6 @@
                                 visited.push(last);
                                 nodes.filter(function (d) {
                                     if (last !== d.id && adjacencyMatrix[[last, d.id]]) {
-
                                         return true;
                                     }
                                     return false;
