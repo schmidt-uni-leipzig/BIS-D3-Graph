@@ -15,6 +15,13 @@ Run `grunt build` to build and minify a library for production usage.
 - Go to directory and download bower dependencies. `bower install`
 - Open examples in example directory
 
+## Dependencies
+- [angular 1](https://github.com/angular/angular.js)
+- [d3](https://github.com/d3/d3)
+- [FileSaver](https://github.com/eligrey/FileSaver.js/)
+- [jsPDF](https://github.com/MrRio/jsPDF)
+- [canvas-to-blob](https://github.com/blueimp/JavaScript-Canvas-to-Blob) (polyfill for `canvas.toBlob()`, needed for Safari)
+
 ## Online examples
 - [Standard](http://k4l4m.github.io/BIS-D3-Graph/examples/index.html)
 - [Big graph](http://k4l4m.github.io/BIS-D3-Graph/examples/big-graph.html)
@@ -31,9 +38,9 @@ Run `grunt build` to build and minify a library for production usage.
  - Edges: Label, color
 - Improve path display
 - Detail view
-- Zoom
+- Zoom (Problems with rectangle zoom, see (branch)[https://github.com/k4l4m/BIS-D3-Graph/tree/rectangle-zoom]
 - Grouping of nodes
-- Label positioning
+- Label positioning (Problems with label placement, see (branch)[https://github.com/k4l4m/BIS-D3-Graph/tree/labelPlacement])
 - Forces
 - Export to png and other formats
 
