@@ -24,7 +24,8 @@
     "d3": "^3.5.16",
     "font-awesome": "fontawesome#^4.6.1",
     "FileSaver": "*",
-    "jspdf": "^1.2.61"
+    "jspdf": "^1.2.61",
+    "canvas-to-blob": "^3.3.0"
   },
   "appPath": "src",
   "devDependencies": {

@@ -598,6 +598,7 @@
                     // Export the graph as a PNG
                     function exportAsPNG(fileName, svg) {
                         getCanvasWithImage(svg, function (canvas) {
+                            console.log(canvas);
                             canvas.toBlob(function (blob) {
                                 saveAs(blob, fileName + '.png');
                             });
