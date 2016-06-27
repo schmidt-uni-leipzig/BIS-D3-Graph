@@ -38,9 +38,9 @@ Run `grunt build` to build and minify a library for production usage.
  - Edges: Label, color
 - Improve path display
 - Detail view
-- Zoom (Problems with rectangle zoom, see (branch)[https://github.com/k4l4m/BIS-D3-Graph/tree/rectangle-zoom]
+- Zoom (Problems with rectangle zoom, see [branch](https://github.com/k4l4m/BIS-D3-Graph/tree/rectangle-zoom))
 - Grouping of nodes
-- Label positioning (Problems with label placement, see (branch)[https://github.com/k4l4m/BIS-D3-Graph/tree/labelPlacement])
+- Label positioning (Problems with label placement, see [branch](https://github.com/k4l4m/BIS-D3-Graph/tree/labelPlacement))
 - Forces
 - Export to png and other formats
 
