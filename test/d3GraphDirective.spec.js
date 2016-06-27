@@ -61,7 +61,10 @@ describe('Directive: d3GraphDirective', function() {
             ]
         };
 
-        scope.options = {};
+        scope.options = {
+            width: 1000,
+            height: 700
+        };
 
         elem = angular.element(template);
         angular.element(document.body).prepend(elem);

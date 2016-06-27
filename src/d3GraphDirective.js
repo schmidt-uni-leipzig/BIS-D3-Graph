@@ -5,7 +5,7 @@
 
     /*global angular, d3, jsPDF */
     angular.module('d3graph', [])
-        .directive('d3Graph', function ($rootScope, $log) {
+        .directive('d3Graph', function ($rootScope) {
             return {
                 restrict: 'E',
                 template: '<svg id="d3Graph"></svg>',
@@ -14,16 +14,35 @@
                     options: '<'
                 },
                 link: function (scope, element, attrs) {
-                    var width = 1000,
-                        height = 700,
-                        circleRadius = 10,
-                        markerWidth = 5,
-                        markerHeight = 8;
+                    // Options setting
+                    var options = {};
+                    options.filename = scope.options.filename || 'graph';
+                    options.grouping = scope.options.grouping || false;
+                    options.nodeClickCb = scope.options.nodeClickCb || function () {};
+                    options.circleRadius = scope.options.circleRadius || 10;
+                    options.marker = {
+                        width: angular.isDefined(scope.options.marker) ? scope.options.marker.width || 5 : 5,
+                        height: angular.isDefined(scope.options.marker) ? scope.options.marker.height || 8 : 8
+                    };
+
+                    // Check width and height. Throw error if one is non existent.
+                    if (!scope.options.width || !scope.options.height) {
+                        throw new Error('options: Width and height has to be specified.');
+                    }
+
+                    // Check width and height to be a number. Throw error if one is not a number.
+                    if (!angular.isNumber(scope.options.width) || !angular.isNumber(scope.options.width)) {
+                        throw new Error('options: Width and height has to be a number.');
+                    }
+
+                    // Set width and height
+                    options.width = scope.options.width;
+                    options.height = scope.options.height;
 
                     //scales
                     var colorScale = d3.scale.category20(),
-                        xScale = d3.scale.linear().domain([0, width]).range([0, width]),
-                        yScale = d3.scale.linear().domain([0, height]).range([0, height]);
+                        xScale = d3.scale.linear().domain([0, options.width]).range([0, options.width]),
+                        yScale = d3.scale.linear().domain([0, options.height]).range([0, options.height]);
 
                     //nodes and links
                     var nodes = scope.data.nodes,
@@ -36,7 +55,7 @@
                     var curve = d3.svg.line()
                         .interpolate("cardinal-closed")
                         .tension(0.85);
-                    var i = 0;
+
                     // Create object with every neighbour
                     var adjacencyMatrix = {};
                     var _nodeNeighbours = [];
@@ -49,14 +68,6 @@
                         adjacencyMatrix[[edge.source, +edge.target]] = true;
                     });
 
-                    // Options setting
-                    var options = {};
-                    options.filename = scope.options.filename || 'graph';
-                    options.grouping = scope.options.grouping || false;
-                    options.nodeClickCb = scope.options.nodeClickCb || function () {
-                        };
-
-
                     // Array of selected nodes
                     var selectedNodes = [];
 
@@ -67,12 +78,13 @@
                     var expandedGroups = {};
                     var groups = groupNodes(nodes);
 
-                    for (i = 0; i < d3.keys(groups).length - 1; i += 1) {
-                        convexHulls(groups[d3.keys(groups)[i]], d3.keys(groups)[i], 16);
-                    }
+                    angular.forEach(groups, function(value, key) {
+                        convexHulls(value, key, 16);
+                    });
+
                     // Force layout
                     var force = d3.layout.force()
-                        .size([width, height])
+                        .size([options.width, options.height])
                         .nodes(nodes)
                         .links(links);
 
@@ -116,23 +128,22 @@
 
                     // Add event control
                     d3.select('body')
-                        .on('keydown.brush', keyDown)
-                        .on('keyup.brush', keyUp);
+                        .on('keydown.brush', keyDown);
 
                     // Style svg
-                    var svg = renderSVG(width, height, zoom);
+                    var svg = renderSVG(options.width, options.height, zoom);
                     var container = renderGraphContainer(svg);
                     hullg = container.append('g');
                     var linksContainer = renderLinks(container);
-                    var nodesContainer = renderNodes(container);
+                    var nodesContainer = renderNodes(container, options.circleRadius);
                     if (scope.options.grouping)
                         initHull();
 
-                    //init hull
+                    //removes the hull
                     function removeHull() {
                         hullg.selectAll("path.hull").remove();
                     }
-
+                    //initialiize hull
                     function initHull() {
                         hull = hullg.selectAll("path.hull")
                             .data(convexHulls(nodes, 0, 15))
@@ -159,6 +170,8 @@
                             });
                     }
 
+                    // Create context menu on right click
+                    // Applies export functions for graph
                     function createContextMenu(svg) {
                         var data = [
                             {
@@ -203,6 +216,7 @@
 
                     var node = svg.selectAll(".node"),
                         link = svg.selectAll(".link");
+
                     // Force step
                     force.on('tick', function () {
                         if (scope.options.grouping)
@@ -248,7 +262,7 @@
                      * Start block
                      */
                     // Init markers for link ends
-                    initMarkers(svg, circleRadius, markerWidth, markerHeight);
+                    initMarkers(svg, options.circleRadius, options.marker.width, options.marker.height);
                     // Start the force layout
                     force.start();
 
@@ -271,7 +285,7 @@
                     }
 
                     // Render the nodes
-                    function renderNodes(container) {
+                    function renderNodes(container, circleRadius) {
                         // Nodes container
                         var nodesContainer = container
                             .append('g')
@@ -409,11 +423,13 @@
                         }
 
                         if (d3.event.keyCode === 71) { //g key
+                            //toggles between nodes and groupes view
                             if (scope.options.grouping) {
                                 // -1 because last one is group undefined
+                                var i;
                                 if (!grouped) {
                                     originalLinks = angular.copy(links);
-                                    for (var i = 0; i < d3.keys(groups).length - 1; i++) {
+                                    for (i = 0; i < d3.keys(groups).length - 1; i++) {
                                         var grpName = "";
                                         for (var u = 0; u < groups[d3.keys(groups)[i]].length; u++) {
                                             grpName += groups[d3.keys(groups)[i]][u].name + ": ";
@@ -465,12 +481,6 @@
                                 toggleGrouped();
                             }
                         }
-                    }
-
-                    // KeyUp
-                    // Mostly reseting states
-                    function keyUp() {
-
                     }
 
                     // Zoom
@@ -708,9 +718,9 @@
                             .attr('class', 'node background')
                             .attr('r', function (d) {
                                 if (d.size)
-                                    return d.size * circleRadius;
+                                    return d.size * options.circleRadius;
                                 else
-                                    return circleRadius;
+                                    return options.circleRadius;
                             })
                             .style('fill', function (d) {
                                 return d.color || '#fff'; // default background color white
@@ -730,9 +740,9 @@
                             .attr('class', 'node foreground')
                             .attr('r', function (d) {
                                 if (d.size)
-                                    return d.size * circleRadius;
+                                    return d.size * options.circleRadius;
                                 else
-                                    return circleRadius;
+                                    return options.circleRadius;
                             })
                             .style({
                                 'fill': 'transparent',
@@ -779,8 +789,8 @@
 
                         // create convex hulls
                         var hullset = [];
-                        for (i in hulls) {
-                            hullset.push({group: i, path: d3.geom.hull(hulls[i])});
+                        for (var hull in hulls) {
+                            hullset.push({group: hull, path: d3.geom.hull(hulls[hull])});
                         }
                         return hullset;
                     }
@@ -806,16 +816,6 @@
                             links.splice(i, 1);
                         });
 
-                    }
-
-                    function removeAttachedLinksByName(name) {
-                        var newLinks = links;
-                        for (var l = 0; l < links.length; l++) {
-                            if (name === links[l].source.name || name === links[l].target.name) {
-                                newLinks.splice(l, 1);
-                            }
-                        }
-                        links = newLinks;
                     }
 
                     function removeNodeByName(n) {
@@ -897,7 +897,8 @@
                                 y = text.attr("y"),
                                 dy = parseFloat(text.attr("dy")),
                                 tspan = text.text(null).append("tspan").attr("x", 0).attr("y", y).attr("dy", dy + "em");
-                            while (word = words.pop()) {
+                            word = words.pop();
+                            while (word) {
                                 line.push(word);
                                 tspan.text(line.join(" "));
                                 if (tspan.node().getComputedTextLength() > width) {
@@ -906,6 +907,8 @@
                                     line = [word];
                                     tspan = text.append("tspan").attr("x", 25).attr("y", y).attr("dy", ++lineNumber * lineHeight + dy + "em").text(word);
                                 }
+
+                                word = words.pop();
                             }
                         });
                     }
@@ -937,8 +940,8 @@
                         var molHeight = maxY - minY;
 
                         // how much larger the drawing area is than the width and the height
-                        var widthRatio = width / molWidth;
-                        var heightRatio = height / molHeight;
+                        var widthRatio = options.width / molWidth;
+                        var heightRatio = options.height / molHeight;
 
                         // we need to fit it in both directions, so we scale according to
                         // the direction in which we need to shrink the most
@@ -949,8 +952,8 @@
                         var newMolHeight = molHeight * minRatio;
 
                         // translate so that it's in the center of the window
-                        var xTrans = -(minX) * minRatio + (width - newMolWidth) / 2;
-                        var yTrans = -(minY) * minRatio + (height - newMolHeight) / 2;
+                        var xTrans = -(minX) * minRatio + (options.width - newMolWidth) / 2;
+                        var yTrans = -(minY) * minRatio + (options.height - newMolHeight) / 2;
 
 
                         // do the actual moving
@@ -972,20 +975,21 @@
                     // Right click drag to select area and export area as SVG/PDF/PNG
                     // Just right click to export full svg
                     function contextMenu() {
+                        /*jshint validthis: true */
                         d3.event.preventDefault();
 
                         var e = this,
                             origin = d3.mouse(e),
                             rect = svg.append('rect').attr('class', 'select');
 
-                        origin[0] = Math.max(0, Math.min(width, origin[0]));
-                        origin[1] = Math.max(0, Math.min(height, origin[1]));
+                        origin[0] = Math.max(0, Math.min(options.width, origin[0]));
+                        origin[1] = Math.max(0, Math.min(options.height, origin[1]));
 
                         d3.select(window)
                             .on("mousemove.contextMenu", function () {
                                 var m = d3.mouse(e);
-                                m[0] = Math.max(0, Math.min(width, m[0]));
-                                m[1] = Math.max(0, Math.min(height, m[1]));
+                                m[0] = Math.max(0, Math.min(options.width, m[0]));
+                                m[1] = Math.max(0, Math.min(options.height, m[1]));
                                 rect.attr("x", Math.min(origin[0], m[0]))
                                     .attr("y", Math.min(origin[1], m[1]))
                                     .attr("width", Math.abs(m[0] - origin[0]))
@@ -995,8 +999,8 @@
                                 d3.select(window).on("mousemove.contextMenu", null).on("mouseup.contextMenu", null);
                                 d3.select("body").classed("noselect", false);
                                 var m = d3.mouse(e);
-                                m[0] = Math.max(0, Math.min(width, m[0]));
-                                m[1] = Math.max(0, Math.min(height, m[1]));
+                                m[0] = Math.max(0, Math.min(options.width, m[0]));
+                                m[1] = Math.max(0, Math.min(options.height, m[1]));
 
                                 var viewBox = {
                                     x: Math.min(origin[0], m[0]),
@@ -1014,8 +1018,8 @@
                                         .append('div')
                                         .append('svg')
                                         .attr('id', 'copy')
-                                        .attr('width', width)
-                                        .attr('height', height)
+                                        .attr('width', options.width)
+                                        .attr('height', options.height)
                                         .attr('viewBox', viewBox.x + ' ' + viewBox.y + ' ' + viewBox.width + ' ' + viewBox.height)
                                         .html(svg.html());
 
@@ -1043,8 +1047,8 @@
                     // Generates a canvas with an image from the svg
                     function getCanvasWithImage(svg, cb) {
                         var appeneded = d3.select('body').append('canvas')
-                            .attr('width', width)
-                            .attr('height', height)
+                            .attr('width', options.width)
+                            .attr('height', options.height)
                             .style('display', 'none');
                         var canvas = document.querySelector("canvas"),
                             context = canvas.getContext("2d");
@@ -1114,6 +1118,7 @@
 
                     // Traverse the graph and get all paths from start node
                     function traverse(start, paths) {
+                        /* jshint loopfunc:true */
                         var visited = [];
                         var queue = [];
                         var next = [start];
@@ -1125,7 +1130,6 @@
                                 visited.push(last);
                                 nodes.filter(function (d) {
                                     if (last !== d.id && adjacencyMatrix[[last, d.id]]) {
-
                                         return true;
                                     }
                                     return false;
